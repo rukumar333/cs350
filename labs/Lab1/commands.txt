@@ -1,0 +1,22 @@
+cp
+Copies files/folders to a specified location.
+Ex. cp file1.txt file2.txt -> Copies file1.text to a new file file2.txt
+
+grep
+Searches for text in an input.
+Ex. grep "main" fork_proc.c
+
+fg
+Switches to jobs running in the foreground
+
+gedit mprog.c &
+Runs gedit on mprog.c in the background.
+
+ps
+Displays processes, their statuses, and PIDS.
+
+top
+Displays running processes, their statuses, PIDS, users, along with other information. Provides a dynamic view of running processes with memory usage as well. 
+
+tar -xvf file.tar
+Extracts contents from file.tar. "Untars" file.tar
