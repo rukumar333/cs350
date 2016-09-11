@@ -1,20 +1,28 @@
 #include <stdio.h>
+#include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 
-/* #define BUFFERSIZE 100000 */
+#include "JobsList.h"
 
 int BUFFERSIZE = 100000;
 
 void runShell();
 void processInput(char * input);
-void runCommand(char **input, unsigned char numArgs);
+void runCommand(char **input, unsigned char numArgs, char background);
+void handler(int sig);
 
 int main(int argc, char **argv){
     runShell();
     return 0;
+}
+
+void handler(int sig){
+    pid_t pid;
+    pid = wait(NULL);
+    printf("Pid %d exited\n", pid);
 }
 
 void runShell(){
@@ -75,10 +83,18 @@ void processInput(char * input){
     	++ i;
     }
     i = 0;
-    runCommand(arguments, numArgs);
+    if(*(arguments[numArgs - 1]) == '&'){
+	printf("Background process\n");
+	runCommand(arguments, numArgs, 1);
+    }else{
+	printf("Foreground process\n");
+	runCommand(arguments, numArgs, 0);
+    }
 }
 
-void runCommand(char **input, unsigned char numArgs){
+void runCommand(char **input, unsigned char numArgs, char background){
+    
+    signal(SIGCHLD, handler);
     pid_t pid = fork();
     if(pid == -1){
 	fprintf(stderr, "fork failed\n");
@@ -91,15 +107,15 @@ void runCommand(char **input, unsigned char numArgs){
     }else{
 	printf("%d\n", pid);
 	int status;
-	pid_t result = waitpid(pid, &status, WNOHANG);
-	if (result == 0) {
-	    printf("Alive\n");
-	} else if (result == -1) {
-	    printf("Error\n");
-	    // Error 
-	} else {
-	    printf("Exited\n");
-	    // Child exited
-	}
+	/* pid_t result = waitpid(pid, &status, WNOHANG); */
+	/* if (result == 0) { */
+	/*     printf("Alive\n"); */
+	/* } else if (result == -1) { */
+	/*     printf("Error\n"); */
+	/*     // Error  */
+	/* } else { */
+	/*     printf("Exited\n"); */
+	/*     // Child exited */
+	/* } */
     }
 }

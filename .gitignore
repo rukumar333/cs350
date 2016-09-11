@@ -3,3 +3,4 @@
 *.tar
 *.exe
 *.out
+*.o
