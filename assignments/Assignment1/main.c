@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "JobsList.h"
 
@@ -62,7 +63,7 @@ void processInput(char * input){
 	    if(*(input + i + 1) == '\n'){
 		++ argumentLength;
 	    }
-	    arguments[countArgs] = (char *)malloc(argumentLength * sizeof(char));
+	    arguments[countArgs] = (char *)malloc(argumentLength * sizeof(char) + 1);
 	    argumentLength = 0;
 	    ++ countArgs;
 	}
@@ -80,7 +81,7 @@ void processInput(char * input){
 		*(arguments[countArgs] + argumentLength) = *(input + i);
 		++ argumentLength;
 	    }
-	    /* *(arguments[countArgs] + argumentLength) = '\0'; */
+	    *(arguments[countArgs] + argumentLength) = '\0';
 	    argumentLength = 0;
 	    ++ countArgs;
 	}
@@ -88,38 +89,58 @@ void processInput(char * input){
     }
     i = 0;
     if(*(arguments[numArgs - 1]) == '&'){
-	printf("Background process\n");
+	/* printf("Background process\n"); */
+	*(arguments[numArgs - 1]) = '\0';
 	runCommand(arguments, numArgs, 1);
     }else{
-	printf("Foreground process\n");
+	/* printf("Foreground process\n"); */
 	runCommand(arguments, numArgs, 0);
     }
 }
 
 void runCommand(char **input, unsigned char numArgs, char background){
-    
-    signal(SIGCHLD, handler);
+    if(strcmp(*input, "listjobs") == 0){
+	listJobs(&jobsList);
+	return;
+    }
+    if(strcmp(*input, "fg") == 0){
+	printf("Foreground a process");
+	char * ptr;
+	int procID = strtol(*(input + 1), &ptr, 10);
+	if(procID == 0){
+	    printf("Enter a valid process ID\n");
+	}else{
+	    pid_t pid = deletePID(&jobsList, (pid_t)procID);
+	    if(pid == -1){
+		printf("PID not found\n");
+	    }else{
+		int status;
+		waitpid(pid, &status, 0);
+	    }
+	}
+	return;
+    }
+    /* if(background){ */
+    /* 	signal(SIGCHLD, handler); */
+    /* } */
     pid_t pid = fork();
     if(pid == -1){
-	fprintf(stderr, "fork failed\n");
-	exit(1); 
+	fprintf(stderr, "Fork failed\n");
+	exit(1);
     }
     if(pid == 0){
+	/*
+	  Child process
+	*/
 	if(execvp(*(input), input) == -1){
 	    fprintf(stderr, "Command not found\n");
 	}
     }else{
-	printf("%d\n", pid);
-	int status;
-	/* pid_t result = waitpid(pid, &status, WNOHANG); */
-	/* if (result == 0) { */
-	/*     printf("Alive\n"); */
-	/* } else if (result == -1) { */
-	/*     printf("Error\n"); */
-	/*     // Error  */
-	/* } else { */
-	/*     printf("Exited\n"); */
-	/*     // Child exited */
-	/* } */
+	if(background){
+	    insert(&jobsList, pid, *input);
+	}else{
+	    int status;
+	    waitpid(pid, &status, 0);	    
+	}
     }
 }

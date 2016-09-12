@@ -38,18 +38,20 @@ typedef struct JobsList{
 } JobsList;
 
 JobsList initList();
-void insert(struct JobsList jobsList, pid_t data, char * command);
-pid_t findPID(struct JobsList jobsList, pid_t data);
-void deleteJobsList(struct JobsList jobsList);
+void insert(struct JobsList * jobsList, pid_t data, char * command);
+pid_t findPID(struct JobsList * jobsList, pid_t data);
+pid_t deletePID(struct JobsList * jobsList, pid_t data);
+void deleteJobsList(struct JobsList * jobsList);
+void listJobs(struct JobsList * jobsList);
 
-NodePID * insertNodePID(struct LinkedListPID list, pid_t data, char * command);
-NodeN * insertNodeN(struct LinkedListN list, NodePID * data);
+NodePID * insertNodePID(struct LinkedListPID * list, pid_t data, char * command);
+NodeN * insertNodeN(struct LinkedListN * list, NodePID * data);
 
-void deleteListPID(struct LinkedListPID list);
-void deleteListN(struct LinkedListN list);
+void deleteListPID(struct LinkedListPID * list);
+void deleteListN(struct LinkedListN * list);
 
-void deleteNodePID(NodePID * node);
-void deleteNodeN(NodeN * node);
+void deleteNodePID(struct NodePID * node);
+void deleteNodeN(struct NodeN * node);
 
 
 #endif
