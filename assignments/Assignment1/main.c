@@ -104,7 +104,6 @@ void runCommand(char **input, unsigned char numArgs, char background){
 	return;
     }
     if(strcmp(*input, "fg") == 0){
-	printf("Foreground a process");
 	char * ptr;
 	int procID = strtol(*(input + 1), &ptr, 10);
 	if(procID == 0){

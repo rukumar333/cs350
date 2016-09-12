@@ -148,14 +148,22 @@ void deleteListN(LinkedListN * list){
 }
 
 void deleteNodePID(NodePID * node){
-    node->previous->next = node->next;
-    node->next->previous = node->previous;
+    if(node->previous != NULL){
+	node->previous->next = node->next;	
+    }
+    if(node->next != NULL){
+	node->next->previous = node->previous;	
+    }
     free(node->command);
     free(node);
 }
 
 void deleteNodeN(NodeN * node){
-    node->previous->next = node->next;
-    node->next->previous = node->previous;
+    if(node->previous != NULL){
+	node->previous->next = node->next;
+    }
+    if(node->next != NULL){
+	node->next->previous = node->previous;	
+    }
     free(node);
 }
