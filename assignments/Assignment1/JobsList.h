@@ -9,27 +9,47 @@
 
 
 
-typedef struct Node{
+typedef struct NodePID{
     pid_t data;
-    struct Node * next;
-    struct Node * previous;
-} Node;
+    char * command;
+    struct NodePID * next;
+    struct NodePID * previous;
+} NodePID;
 
-typedef struct LinkedList{
-    struct Node * head;
-    struct Node * tail;
-} LinkedList;
+typedef struct LinkedListPID{
+    struct NodePID * head;
+    struct NodePID * tail;
+} LinkedListPID;
+
+typedef struct NodeN{
+    struct NodePID *  data;
+    struct NodeN * next;
+    struct NodeN * previous;
+} NodeN;
+
+typedef struct LinkedListN{
+    struct NodeN * head;
+    struct NodeN * tail;
+} LinkedListN;
 
 typedef struct JobsList{
-    struct LinkedList jobs;
-    LinkedList hashmap[1024];
+    struct LinkedListPID jobs;
+    LinkedListN hashmap[1024];
 } JobsList;
 
 JobsList initList();
-Node * insertLinked(struct LinkedList list, pid_t data);
-void insert(struct JobsList list, pid_t data);
-void deleteList(struct LinkedList list);
-void deleteNode(struct Node * node);
+void insert(struct JobsList jobsList, pid_t data, char * command);
+pid_t findPID(struct JobsList jobsList, pid_t data);
+void deleteJobsList(struct JobsList jobsList);
+
+NodePID * insertNodePID(struct LinkedListPID list, pid_t data, char * command);
+NodeN * insertNodeN(struct LinkedListN list, NodePID * data);
+
+void deleteListPID(struct LinkedListPID list);
+void deleteListN(struct LinkedListN list);
+
+void deleteNodePID(NodePID * node);
+void deleteNodeN(NodeN * node);
 
 
 #endif

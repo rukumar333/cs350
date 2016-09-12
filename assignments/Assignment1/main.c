@@ -9,12 +9,15 @@
 
 int BUFFERSIZE = 100000;
 
+JobsList jobsList;
+
 void runShell();
 void processInput(char * input);
 void runCommand(char **input, unsigned char numArgs, char background);
 void handler(int sig);
 
 int main(int argc, char **argv){
+    jobsList = initList();
     runShell();
     return 0;
 }
@@ -22,6 +25,7 @@ int main(int argc, char **argv){
 void handler(int sig){
     pid_t pid;
     pid = wait(NULL);
+    
     printf("Pid %d exited\n", pid);
 }
 

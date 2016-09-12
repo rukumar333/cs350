@@ -9,5 +9,8 @@ main.o: main.c
 LinkedList: JobsList.c JobsList.h
 	gcc $(FLAGS) -c JobsList.c
 
+clean:
+	rm *.o cs350sh
+
 
 
