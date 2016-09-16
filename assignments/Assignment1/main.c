@@ -14,6 +14,7 @@ JobsList jobsList;
 
 void runShell();
 char processInput(char * input);
+char processInputS(char * input);
 char runCommand(char **input, unsigned char numArgs, char background);
 void handler(int sig);
 void freeInput(char **input, int numArgs);
@@ -36,11 +37,54 @@ void runShell(){
     while(status){
 	printf("cs350sh> ");
 	if(fgets(buffer, BUFFERSIZE, stdin) != NULL){
-	    status = processInput(buffer);
+	    status = processInputS(buffer);
 	}else{
 	    printf("Error with input\n");
 	}
     }
+}
+
+char processInputS(char * input){
+    if(*(input) == '\n'){
+	return 1;
+    }
+    unsigned char numArgs = 1;
+    int i = 0;
+    while(*(input + i) != '\0'){
+	if(*(input + i) == ' '){
+	    ++ numArgs;
+	}
+	if(*(input + i) == '\n'){
+	    *(input + i) = '\0';
+	}
+	++ i;
+    }
+    char * arguments[numArgs + 1];
+    arguments[numArgs] = '\0';
+    const char s[2] = " ";
+    char * token;
+    i = 0;
+    token = strtok(input, s);
+    while(token != NULL){
+	size_t length = strlen(token);
+	arguments[i] = (char *)malloc(length * sizeof(char) + 1);
+	*(arguments[i] + length) = '\0';
+	strcpy(arguments[i], token);
+	token = strtok(NULL, s);
+	++ i;
+    }
+    i = 0;
+    while(i < numArgs){
+    	++ i;
+    }
+    /* return 0; */
+    if(*(arguments[numArgs - 1]) == '&'){
+	*(arguments[numArgs - 1]) = '\0';
+	return runCommand(arguments, numArgs, 1);
+    }else{
+	return runCommand(arguments, numArgs, 0);
+    }
+    return 0;
 }
 
 char processInput(char * input){
@@ -100,11 +144,6 @@ char processInput(char * input){
 }
 
 char runCommand(char **input, unsigned char numArgs, char background){
-    int i = 0;
-    while(i < numArgs){
-    	printf("%s\n", *(input + i));
-    	++ i;
-    }
     if(strcmp(*input, "listjobs") == 0){
 	listJobs(&jobsList);
 	freeInput(input, numArgs);
@@ -163,7 +202,7 @@ char runCommand(char **input, unsigned char numArgs, char background){
 void freeInput(char **input, int numArgs){
     int i = 0;
     while(i < numArgs){
-	free(*(input + i));
-	++ i;
+    	free(*(input + i));
+    	++ i;
     }
 }
