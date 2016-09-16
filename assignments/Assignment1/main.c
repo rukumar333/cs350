@@ -14,7 +14,6 @@ JobsList jobsList;
 
 void runShell();
 char processInput(char * input);
-char processInputS(char * input);
 char runCommand(char **input, unsigned char numArgs, char background);
 void handler(int sig);
 void freeInput(char **input, int numArgs);
@@ -44,7 +43,7 @@ void runShell(){
     }
 }
 
-char processInputS(char * input){
+char processInput(char * input){
     if(*(input) == '\n'){
 	return 1;
     }
@@ -72,68 +71,6 @@ char processInputS(char * input){
 	strcpy(arguments[i], token);
 	token = strtok(NULL, s);
 	++ i;
-    }
-    i = 0;
-    while(i < numArgs){
-    	++ i;
-    }
-    /* return 0; */
-    if(*(arguments[numArgs - 1]) == '&'){
-	*(arguments[numArgs - 1]) = '\0';
-	return runCommand(arguments, numArgs, 1);
-    }else{
-	return runCommand(arguments, numArgs, 0);
-    }
-    return 0;
-}
-
-char processInput(char * input){
-    if(*(input) == '\n'){
-	return 1;
-    }
-    unsigned char numArgs = 1;
-    int i = 0;
-    while(*(input + i) != '\n'){
-	if(*(input + i) == ' '){
-	    ++ numArgs;
-	}
-	++ i;
-    }
-    char * arguments[numArgs + 1];
-    arguments[numArgs + 1] = '\0';
-    i = 0;
-    char argumentLength = 0;
-    unsigned char countArgs = 0;
-    while(*(input + i) != '\n'){
-	if(*(input + i) != ' ' && *(input + i + 1) != '\n'){
-	    ++ argumentLength;
-	}else{
-	    if(*(input + i + 1) == '\n'){
-		++ argumentLength;
-	    }
-	    arguments[countArgs] = (char *)malloc(argumentLength * sizeof(char) + 1);
-	    argumentLength = 0;
-	    ++ countArgs;
-	}
-	++ i;
-    }
-    i = 0;
-    countArgs = 0;
-    argumentLength = 0;
-    while(*(input + i) != '\n'){
-	if(*(input + i) != ' ' && *(input + i + 1) != '\n'){
-    	    *(arguments[countArgs] + argumentLength) = *(input + i);
-    	    ++ argumentLength;
-    	}else{
-	    if(*(input + i + 1) == '\n'){
-		*(arguments[countArgs] + argumentLength) = *(input + i);
-		++ argumentLength;
-	    }
-	    *(arguments[countArgs] + argumentLength) = '\0';
-	    argumentLength = 0;
-	    ++ countArgs;
-	}
-    	++ i;
     }
     if(*(arguments[numArgs - 1]) == '&'){
 	*(arguments[numArgs - 1]) = '\0';
