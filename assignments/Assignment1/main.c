@@ -36,7 +36,7 @@ void runShell(){
     while(status){
 	printf("cs350sh> ");
 	if(fgets(buffer, BUFFERSIZE, stdin) != NULL){
-	    status = processInputS(buffer);
+	    status = processInput(buffer);
 	}else{
 	    printf("Error with input\n");
 	}
