@@ -73,6 +73,10 @@ void listJobs(JobsList * jobsList){
 	    printf("%s with PID %d Status: RUNNING\n", it->command, it->data);
 	}else{
 	    printf("%s with PID %d Status: FINISHED\n", it->command, it->data);
+	    pid_t dpid = deletePID(jobsList, it->data);
+	    if(dpid == -1){
+		printf("Error in deleting finished job from data structure.\n");
+	    }
 	}
 	it = it->next;
     }
