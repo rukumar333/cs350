@@ -100,6 +100,11 @@ char processInput(char * input){
 }
 
 char runCommand(char **input, unsigned char numArgs, char background){
+    int i = 0;
+    while(i < numArgs){
+    	printf("%s\n", *(input + i));
+    	++ i;
+    }
     if(strcmp(*input, "listjobs") == 0){
 	listJobs(&jobsList);
 	freeInput(input, numArgs);
@@ -141,6 +146,7 @@ char runCommand(char **input, unsigned char numArgs, char background){
 	*/
 	if(execvp(*(input), input) == -1){
 	    fprintf(stderr, "Command not found\n");
+	    exit(0);
 	}
     }else{
 	if(background){
