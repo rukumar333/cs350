@@ -7,8 +7,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-
-
 typedef struct NodePID{
     pid_t data;
     char * command;
@@ -50,8 +48,8 @@ NodeN * insertNodeN(struct LinkedListN * list, NodePID * data);
 void deleteListPID(struct LinkedListPID * list);
 void deleteListN(struct LinkedListN * list);
 
-void deleteNodePID(struct NodePID * node);
-void deleteNodeN(struct NodeN * node);
+void deleteNodePID(struct LinkedListPID * list, struct NodePID * node);
+void deleteNodeN(struct LinkedListN * list, struct NodeN * node);
 
 
 #endif

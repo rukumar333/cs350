@@ -32,8 +32,8 @@ pid_t deletePID(JobsList * jobsList, pid_t data){
     NodeN * it = jobsList->hashmap[hash].head;
     while(it != NULL){
 	if(it->data->data == data){
-	    deleteNodePID(it->data);
-	    deleteNodeN(it);
+	    deleteNodePID(&jobsList->jobs, it->data);
+	    deleteNodeN(&jobsList->hashmap[hash], it);
 	    return data;
 	}
 	it = it->next;
@@ -63,7 +63,7 @@ void listJobs(JobsList * jobsList){
     printf("List of background processes:\n");
     NodePID * it = jobsList->jobs.head;
     int status;
-    while(it != NULL){	
+    while(it != NULL){
 	pid_t pid = waitpid(it->data, &status, WNOHANG);
 	if(pid < 0){
 	    printf("Error in listJobs()\n");
@@ -151,23 +151,65 @@ void deleteListN(LinkedListN * list){
     list->tail = NULL;
 }
 
-void deleteNodePID(NodePID * node){
-    if(node->previous != NULL){
-	node->previous->next = node->next;	
+void deleteNodePID(LinkedListPID * list, NodePID * node){
+    /* if(node == list->head && node == list->head){ */
+    /* 	list->head = NULL; */
+    /* 	list->tail = NULL; */
+    /* } */
+    /* if(node == list->head){ */
+    /* 	if(node == list->tail){ */
+    /* 	    list->head = NULL; */
+    /* 	    list->tail = NULL;    */
+    /* 	}else{ */
+	    
+    /* 	} */
+    /* } */
+    if(node->previous != NULL){	
+	node->previous->next = node->next;
+	if(node == list->tail){
+	    list->tail = node->previous;
+       }
     }
     if(node->next != NULL){
 	node->next->previous = node->previous;	
+	if(node == list->head){
+	    list->head = node->next;
+	}
+    }
+    if(node->previous == NULL && node->next == NULL){
+    	list->head = NULL;
+    	list->tail = NULL;
     }
     free(node->command);
     free(node);
 }
 
-void deleteNodeN(NodeN * node){
-    if(node->previous != NULL){
+void deleteNodeN(LinkedListN * list, NodeN * node){
+    /* if(node->previous == NULL && node->next == NULL){ */
+    /* 	list->head = NULL; */
+    /* 	list->tail = NULL; */
+    /* } */
+    /* if(node->previous != NULL){ */
+    /* 	node->previous->next = node->next; */
+    /* } */
+    /* if(node->next != NULL){ */
+    /* 	node->next->previous = node->previous;	 */
+    /* } */
+    if(node->previous != NULL){	
 	node->previous->next = node->next;
+	if(node == list->tail){
+	    list->tail = node->previous;
+	}
     }
     if(node->next != NULL){
 	node->next->previous = node->previous;	
+	if(node == list->head){
+	    list->head = node->next;
+	}
+    }
+    if(node->previous == NULL && node->next == NULL){
+    	list->head = NULL;
+    	list->tail = NULL;
     }
     free(node);
 }

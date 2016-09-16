@@ -13,9 +13,10 @@ int BUFFERSIZE = 100000;
 JobsList jobsList;
 
 void runShell();
-void processInput(char * input);
-void runCommand(char **input, unsigned char numArgs, char background);
+char processInput(char * input);
+char runCommand(char **input, unsigned char numArgs, char background);
 void handler(int sig);
+void freeInput(char **input, int numArgs);
 
 int main(int argc, char **argv){
     jobsList = initList();
@@ -25,24 +26,27 @@ int main(int argc, char **argv){
 
 void handler(int sig){
     pid_t pid;
-    pid = wait(NULL);
-    
+    pid = wait(NULL);    
     printf("Pid %d exited\n", pid);
 }
 
 void runShell(){
     char buffer[BUFFERSIZE];
-    while(1){
+    char status = 1;
+    while(status){
 	printf("cs350sh> ");
 	if(fgets(buffer, BUFFERSIZE, stdin) != NULL){
-	    processInput(buffer);
+	    status = processInput(buffer);
 	}else{
 	    printf("Error with input\n");
 	}
     }
 }
 
-void processInput(char * input){
+char processInput(char * input){
+    if(*(input) == '\n'){
+	return 1;
+    }
     unsigned char numArgs = 1;
     int i = 0;
     while(*(input + i) != '\n'){
@@ -87,21 +91,19 @@ void processInput(char * input){
 	}
     	++ i;
     }
-    i = 0;
     if(*(arguments[numArgs - 1]) == '&'){
-	/* printf("Background process\n"); */
 	*(arguments[numArgs - 1]) = '\0';
-	runCommand(arguments, numArgs, 1);
+	return runCommand(arguments, numArgs, 1);
     }else{
-	/* printf("Foreground process\n"); */
-	runCommand(arguments, numArgs, 0);
+	return runCommand(arguments, numArgs, 0);
     }
 }
 
-void runCommand(char **input, unsigned char numArgs, char background){
+char runCommand(char **input, unsigned char numArgs, char background){
     if(strcmp(*input, "listjobs") == 0){
 	listJobs(&jobsList);
-	return;
+	freeInput(input, numArgs);
+	return 1;
     }
     if(strcmp(*input, "fg") == 0){
 	char * ptr;
@@ -117,7 +119,13 @@ void runCommand(char **input, unsigned char numArgs, char background){
 		waitpid(pid, &status, 0);
 	    }
 	}
-	return;
+	freeInput(input, numArgs);
+	return 1;
+    }
+    if(strcmp(*input, "quit") == 0){
+	deleteJobsList(&jobsList);
+	freeInput(input, numArgs);
+	return 0;
     }
     /* if(background){ */
     /* 	signal(SIGCHLD, handler); */
@@ -139,7 +147,17 @@ void runCommand(char **input, unsigned char numArgs, char background){
 	    insert(&jobsList, pid, *input);
 	}else{
 	    int status;
-	    waitpid(pid, &status, 0);	    
+	    waitpid(pid, &status, 0);
 	}
+	freeInput(input, numArgs);
+    }
+    return 1;
+}
+
+void freeInput(char **input, int numArgs){
+    int i = 0;
+    while(i < numArgs){
+	free(*(input + i));
+	++ i;
     }
 }
