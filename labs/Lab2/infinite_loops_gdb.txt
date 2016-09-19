@@ -1,0 +1,110 @@
+Program received signal SIGINT, Interrupt.
+0x00007ffff7b00710 in __write_nocancel () at ../sysdeps/unix/syscall-template.S:81
+81      ../sysdeps/unix/syscall-template.S: No such file or directory.
+(gdb) Quit
+(gdb) backtrace
+#0  0x00007ffff7b00710 in __write_nocancel () at ../sysdeps/unix/syscall-template.S:81
+#1  0x00007ffff7a8df03 in _IO_new_file_write (f=0x7ffff7dd4400 <_IO_2_1_stdout_>, data=0x7ffff7ff6000,
+    n=1024) at fileops.c:1261
+#2  0x00007ffff7a8f3dc in new_do_write (to_do=1024, data=0x7ffff7ff6000 'y' <repeats 200 times>...,
+    fp=0x7ffff7dd4400 <_IO_2_1_stdout_>) at fileops.c:538
+#3  _IO_new_do_write (fp=fp@entry=0x7ffff7dd4400 <_IO_2_1_stdout_>,
+    data=0x7ffff7ff6000 'y' <repeats 200 times>..., to_do=1024) at fileops.c:511
+#4  0x00007ffff7a8f87b in _IO_new_file_overflow (f=0x7ffff7dd4400 <_IO_2_1_stdout_>, ch=121)
+    at fileops.c:871
+#5  0x00007ffff7a85a7e in putchar (c=<optimized out>) at putchar.c:29
+#6  0x000000000040067b in main (argc=1, argv=0x7fffffffde08) at infinite_loop.c:8
+(gdb) frame 6
+#6  0x000000000040067b in main (argc=1, argv=0x7fffffffde08) at infinite_loop.c:8
+8                   printf("%c", c);
+(gdb) next
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy_IO_new_file_write (f=0x7ffff7dd4400 <_IO_2_1_stdout_>, data=0x7ffff7ff6000, n=1024) at fileops.c:1262
+1262    fileops.c: No such file or directory.
+(gdb)
+1267    in fileops.c
+(gdb)
+1268    in fileops.c
+(gdb)
+1256    in fileops.c
+(gdb)
+1271    in fileops.c
+(gdb)
+1274    in fileops.c
+(gdb)
+new_do_write (to_do=1024, data=0x7ffff7ff6000 'y' <repeats 200 times>...,
+    fp=0x7ffff7dd4400 <_IO_2_1_stdout_>) at fileops.c:539
+539     in fileops.c
+(gdb)
+545     in fileops.c
+(gdb)
+541     in fileops.c
+(gdb)
+545     in fileops.c
+(gdb)
+541     in fileops.c
+(gdb)
+542     in fileops.c
+(gdb)
+545     in fileops.c
+(gdb)
+544     in fileops.c
+(gdb)
+_IO_new_do_write (fp=fp@entry=0x7ffff7dd4400 <_IO_2_1_stdout_>,
+    data=0x7ffff7ff6000 'y' <repeats 200 times>..., to_do=1024) at fileops.c:511
+511     in fileops.c
+(gdb)
+512     in fileops.c
+(gdb)
+511     in fileops.c
+(gdb)
+512     in fileops.c
+(gdb)
+_IO_new_file_overflow (f=0x7ffff7dd4400 <_IO_2_1_stdout_>, ch=121) at fileops.c:873
+873     in fileops.c
+(gdb)
+874     in fileops.c
+(gdb)
+875     in fileops.c
+(gdb)
+879     in fileops.c
+(gdb)
+880     in fileops.c
+(gdb)
+putchar (c=<optimized out>) at putchar.c:28
+28      putchar.c: No such file or directory.
+(gdb)
+32      in putchar.c
+(gdb)
+main (argc=1, argv=0x7fffffffde08) at infinite_loop.c:6
+6           while(c != EOF){
+(gdb)
+7               if(isalnum(c))
+(gdb)
+8                   printf("%c", c);
+(gdb)
+6           while(c != EOF){
+(gdb)
+7               if(isalnum(c))
+(gdb)
+8                   printf("%c", c);
+(gdb)
+6           while(c != EOF){
+(gdb)
+7               if(isalnum(c))
+(gdb)
+8                   printf("%c", c);
+(gdb)
+6           while(c != EOF){
+(gdb)
+7               if(isalnum(c))
+(gdb)
+8                   printf("%c", c);
+(gdb)
+6           while(c != EOF){
+(gdb)
+7               if(isalnum(c))
+(gdb)
+8                   printf("%c", c);
+(gdb)
+6           while(c != EOF){
+(gdb)

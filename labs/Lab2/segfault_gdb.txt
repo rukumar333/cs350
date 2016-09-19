@@ -1,0 +1,10 @@
+(gdb) run
+Starting program: /home/rushil/cs350/labs/Lab2/segfault
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0000000000400539 in main () at segfault.c:4
+4           printf("%d\n",*p);
+(gdb) backtrace
+#0  0x0000000000400539 in main () at segfault.c:4
+(gdb) print p
+$1 = (int *) 0x0
