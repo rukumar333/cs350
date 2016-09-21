@@ -10,11 +10,6 @@
 typedef struct NodePID{
     pid_t data;
     char * command;
-    /*
-      status == 0 then command running
-      status == 1 then command finished
-     */
-    char status;
     struct NodePID * next;
     struct NodePID * previous;
 } NodePID;
@@ -46,7 +41,6 @@ pid_t findPID(struct JobsList * jobsList, pid_t data);
 pid_t deletePID(struct JobsList * jobsList, pid_t data);
 void deleteJobsList(struct JobsList * jobsList);
 void listJobs(struct JobsList * jobsList);
-char setPIDStatus(struct JobsList * jobsList, pid_t data, char status);
 
 NodePID * insertNodePID(struct LinkedListPID * list, pid_t data, char * command);
 NodeN * insertNodeN(struct LinkedListN * list, NodePID * data);
