@@ -2,6 +2,9 @@
 
 int lengthHash = 1024;
 
+/*
+  Returns an initialized JobsList.
+ */
 JobsList initList(){
     JobsList jobsList;
     jobsList.jobs.head = NULL;
@@ -62,14 +65,15 @@ void deleteJobsList(JobsList * jobsList){
 void listJobs(JobsList * jobsList){
     printf("List of background processes:\n");
     NodePID * it = jobsList->jobs.head;
-    int status;
+    /* int status; */
     while(it != NULL){
-	pid_t pid = waitpid(it->data, &status, WNOHANG);
-	if(pid < 0){
+	char status = it->status;
+	/* pid_t pid = waitpid(it->data, &status, WNOHANG); */
+	if(status < 0){
 	    printf("Error in listJobs()\n");
 	    return;
 	}
-	if(pid == 0){
+	if(status == 0){
 	    printf("%s with PID %d Status: RUNNING\n", it->command, it->data);
 	}else{
 	    printf("%s with PID %d Status: FINISHED\n", it->command, it->data);
@@ -82,7 +86,20 @@ void listJobs(JobsList * jobsList){
     }
 }
 
-NodePID * insertNodePID(struct LinkedListPID * list, pid_t data, char * command){
+char setPIDStatus(JobsList * jobsList, pid_t pid, char status){
+    int hash = pid % lengthHash;
+    NodeN * it = jobsList->hashmap[hash].head;
+    while(it != NULL){
+	if(it->data->data == pid){
+	    it->data->status = status;
+	    return 1;
+	}
+	it = it->next;
+    }
+    return -1;
+}
+
+NodePID * insertNodePID(LinkedListPID * list, pid_t data, char * command){
     if(list->head == NULL){
 	list->head = (NodePID *)malloc(sizeof(struct NodePID));
 	list->tail = list->head;
@@ -95,6 +112,7 @@ NodePID * insertNodePID(struct LinkedListPID * list, pid_t data, char * command)
     }
     list->tail->next = NULL;
     list->tail->data = data;
+    list->tail->status = 0;
     unsigned char lengthCommand = 0;
     unsigned char i = 0;
     while(*(command + i) != '\0'){
@@ -111,7 +129,7 @@ NodePID * insertNodePID(struct LinkedListPID * list, pid_t data, char * command)
     return list->tail;
 }
 
-NodeN * insertNodeN(struct LinkedListN * list, NodePID * data){
+NodeN * insertNodeN(LinkedListN * list, NodePID * data){
     if(list->head == NULL){
 	list->head = (NodeN *)malloc(sizeof(struct NodeN));
 	list->tail = list->head;

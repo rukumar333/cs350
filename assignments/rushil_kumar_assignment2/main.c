@@ -25,8 +25,13 @@ int main(int argc, char **argv){
 }
 
 void handler(int sig){
+    printf("Sig: %d\n", sig);
     pid_t pid;
-    pid = wait(NULL);    
+    pid = wait(NULL);
+    if(setPIDStatus(&jobsList, pid, 1) == -1){
+	fprintf(stderr, "Error finding PID %d\n in handler", pid);
+	return;
+    }
     printf("Pid %d exited\n", pid);
 }
 
@@ -108,9 +113,9 @@ char runCommand(char **input, unsigned char numArgs, char background){
 	freeInput(input, numArgs);
 	return 0;
     }
-    /* if(background){ */
-    /* 	signal(SIGCHLD, handler); */
-    /* } */
+    if(background){
+    	signal(SIGCHLD, handler);
+    }
     pid_t pid = fork();
     if(pid == -1){
 	fprintf(stderr, "Fork failed\n");
