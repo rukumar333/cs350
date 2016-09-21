@@ -73,7 +73,7 @@ char processInput(char * input){
 	++ i;
     }
     if(*(arguments[numArgs - 1]) == '&'){
-	*(arguments[numArgs - 1]) = '\0';
+	(arguments[numArgs - 1]) = NULL;
 	return runCommand(arguments, numArgs, 1);
     }else{
 	return runCommand(arguments, numArgs, 0);
