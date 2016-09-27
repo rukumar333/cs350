@@ -2,6 +2,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,10 +15,14 @@ int BUFFERSIZE = 100000;
 JobsList jobsList;
 
 void runShell();
-char processInput(char * input);
+char parseInput(char * input);
+char processInput(char **input, unsigned char numArgs);
 char runCommand(char **input, unsigned char numArgs, char background);
 void handler(int sig);
 void freeInput(char **input, int numArgs);
+void foregroundProcess(char **input);
+void directFrom(char **input, int numArgs);
+void directTo(char **input, int numArgs, int append);
 
 int main(int argc, char **argv){
     jobsList = initList();
@@ -36,14 +42,14 @@ void runShell(){
     while(status){
 	printf("cs350sh> ");
 	if(fgets(buffer, BUFFERSIZE, stdin) != NULL){
-	    status = processInput(buffer);
+	    status = parseInput(buffer);
 	}else{
 	    printf("Error with input\n");
 	}
     }
 }
 
-char processInput(char * input){
+char parseInput(char * input){
     if(*(input) == '\n'){
 	return 1;
     }
@@ -72,12 +78,30 @@ char processInput(char * input){
 	token = strtok(NULL, s);
 	++ i;
     }
-    if(*(arguments[numArgs - 1]) == '&'){
-	(arguments[numArgs - 1]) = NULL;
-	return runCommand(arguments, numArgs, 1);
+    return processInput(arguments, numArgs);
+    /* if(*(arguments[numArgs - 1]) == '&'){ */
+    /* 	(arguments[numArgs - 1]) = NULL; */
+    /* 	return runCommand(arguments, numArgs, 1); */
+    /* }else{ */
+    /* 	return runCommand(arguments, numArgs, 0); */
+    /* } */
+}
+
+char processInput(char **input, unsigned char numArgs){
+    char background = *(input + numArgs - 1) == '&';
+    
+    pid_t pid = fork();
+    if(pid == 0){
+	directTo(input, numArgs, 0);
+	if(execvp(*(input), input) == -1){
+	    fprintf(stderr, "Command not found\n");
+	    exit(0);
+	}
     }else{
-	return runCommand(arguments, numArgs, 0);
+	freeInput(input, numArgs);
+	waitpid(pid, NULL, 0);
     }
+    return 1;
 }
 
 char runCommand(char **input, unsigned char numArgs, char background){
@@ -87,19 +111,7 @@ char runCommand(char **input, unsigned char numArgs, char background){
 	return 1;
     }
     if(strcmp(*input, "fg") == 0){
-	char * ptr;
-	int procID = strtol(*(input + 1), &ptr, 10);
-	if(procID == 0){
-	    printf("Enter a valid process ID\n");
-	}else{
-	    pid_t pid = deletePID(&jobsList, (pid_t)procID);
-	    if(pid == -1){
-		printf("PID not found\n");
-	    }else{
-		int status;
-		waitpid(pid, &status, 0);
-	    }
-	}
+	foregroundProcess(input);
 	freeInput(input, numArgs);
 	return 1;
     }
@@ -108,9 +120,6 @@ char runCommand(char **input, unsigned char numArgs, char background){
 	freeInput(input, numArgs);
 	return 0;
     }
-    /* if(background){ */
-    /* 	signal(SIGCHLD, handler); */
-    /* } */
     pid_t pid = fork();
     if(pid == -1){
 	fprintf(stderr, "Fork failed\n");
@@ -134,6 +143,46 @@ char runCommand(char **input, unsigned char numArgs, char background){
 	freeInput(input, numArgs);
     }
     return 1;
+}
+
+void foregroundProcess(char **input){
+    char * ptr;
+    int procID = strtol(*(input + 1), &ptr, 10);
+    if(procID == 0){
+	printf("Enter a valid process ID\n");
+    }else{
+	pid_t pid = deletePID(&jobsList, (pid_t)procID);
+	if(pid == -1){
+	    printf("PID not found\n");
+	}else{
+	    int status;
+	    waitpid(pid, &status, 0);
+	}
+    }
+}
+
+void directFrom(char **input, int numArgs){
+    int fd = open(*(input + numArgs - 1), O_RDONLY);
+    /* close(0); */
+    dup2(fd, 0);
+    close(fd);
+    free(*(input + numArgs - 2));
+    free(*(input + numArgs - 1));
+    *(input + numArgs - 2) = NULL;
+}
+
+void directTo(char **input, int numArgs, int append){
+    int fd;
+    if(append){
+	fd = open(*(input + numArgs - 1), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+    }else{
+	fd = open(*(input + numArgs - 1), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+    }
+    dup2(fd, 1);
+    close(fd);
+    free(*(input + numArgs - 2));
+    free(*(input + numArgs - 1));
+    *(input + numArgs - 2) = NULL;
 }
 
 void freeInput(char **input, int numArgs){
