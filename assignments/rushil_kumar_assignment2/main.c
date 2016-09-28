@@ -17,12 +17,17 @@ JobsList jobsList;
 void runShell();
 char parseInput(char * input);
 char processInput(char **input, unsigned char numArgs);
-char runCommand(char **input, unsigned char numArgs, char background);
+char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int pipe[2]);
+char checkPipeRedir(char * input);
+void runCommand(char **input, unsigned char numArgs);
 void handler(int sig);
 void freeInput(char **input, int numArgs);
 void foregroundProcess(char **input);
-void directFrom(char **input, int numArgs);
-void directTo(char **input, int numArgs, int append);
+void directFrom(char * file);
+void directTo(char * file, char append);
+void pipeFrom(int * pipe);
+void pipeTo(int * pipe);
+void normalPipe();
 
 int main(int argc, char **argv){
     jobsList = initList();
@@ -45,7 +50,247 @@ void runShell(){
 	    status = parseInput(buffer);
 	}else{
 	    printf("Error with input\n");
+	    exit(1);
 	}
+    }
+}
+
+char processInput(char **input, unsigned char numArgs){
+    if(strcmp(*input, "listjobs") == 0){
+	listJobs(&jobsList);
+	freeInput(input, numArgs);
+	return 1;
+    }
+    if(strcmp(*input, "fg") == 0){
+	foregroundProcess(input);
+	freeInput(input, numArgs);
+	return 1;
+    }
+    if(strcmp(*input, "quit") == 0){
+	deleteJobsList(&jobsList);
+	freeInput(input, numArgs);
+	return 0;
+    }
+    char background = **(input + numArgs - 1) == '&';
+    if(background){
+	free(*(input + numArgs - 1));
+	*(input + numArgs - 1) = NULL;
+	-- numArgs;
+    }
+    pid_t pid;
+    if((pid = fork()) == -1){
+	fprintf(stderr, "Fork failed\n");
+    	exit(1);
+    }
+    /* signal(SIGCHLD, handler); */
+    if(pid == 0){
+	//Child Process
+	return recurseProcessInput(input, numArgs, 0, NULL);	
+    }else{
+	//Parent Process
+	if(background){
+	    insert(&jobsList, pid, *input);
+	}else{
+	    int status;
+	    waitpid(pid, &status, 0);
+	}
+    }
+    return 1;
+}
+
+char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int firstPipe[2]){
+    if(currentArg >= numArgs){
+	return 0;
+    }
+    printf("Current arg: %s\n", *(input + currentArg));
+    if(firstPipe != NULL){
+	//Set input from pipe
+	pipeFrom(firstPipe);
+    }
+    char * command[numArgs + 1 - currentArg];
+    unsigned char numCommandArgs = 0;    
+    int i = 0;
+    char status;
+    while(i < numArgs && (status = checkPipeRedir(*(input + currentArg + i))) == -1){
+	size_t length = strlen(*(input + currentArg + i));
+	command[i] = (char *)malloc(length * sizeof(char) + 1);
+	*(command[i] + length) = '\0';
+	strcpy(command[i], *(input + currentArg + i));
+	++ i;
+	++ numCommandArgs;
+    }
+    command[i] = NULL;
+    int secondPipe[2];
+    char usedPipe = 0;
+    switch(status){
+    case 0:
+	//Set input from file
+	directFrom(*(input + currentArg + i + 1));
+	//Set output to pipe
+	if(currentArg + i + 2 < numArgs){
+	    char innerStatus = checkPipeRedir(*(input + currentArg + i + 2));
+	    switch(innerStatus){
+	    case 1:
+		//Set output to file w/o append
+		directTo(*(input + currentArg + i + 3), 0);
+		i = i + 2;
+		break;
+	    case 2:
+		//Set output to file w/ append
+		directTo(*(input + currentArg + i + 3), 1);
+		i = i + 2;
+		break;
+	    case 3:
+		//Set output to pipe
+		if(pipe(secondPipe) == -1){
+		    perror("pipe");
+		    exit(1);
+		}
+		pipeTo(secondPipe);
+		usedPipe = 1;
+		i = i + 1;
+		break;		
+	    }
+	}
+	i = i + 2;
+	break;
+    case 1:
+	//Set output to file w/o append
+	directTo(*(input + currentArg + i + 1), 0);
+	i = i + 2;
+	break;
+    case 2:
+	//Set output to file w/ append
+	directTo(*(input + currentArg + i + 1), 1);
+	i = i + 2;
+	break;
+    case 3:
+	//Set output to pipe
+	printf("Setting output to pipe\n");
+	if(pipe(secondPipe) == -1){
+	    perror("pipe");
+	    exit(1);
+	}
+	pipeTo(secondPipe);
+	usedPipe = 1;
+	i = i + 1;
+	break;
+    }
+    pid_t pid;
+    if((pid = fork()) == -1){
+    	fprintf(stderr, "Fork failed\n");
+    	exit(1);
+    }
+    if(pid == 0){
+	/*
+	  Child Process
+	 */
+	/* recurseProcessInput(input, numArgs, currentArg + i, usedPipe ? secondPipe : NULL); */
+	runCommand(command, numCommandArgs);
+    }else{
+	/*
+	  Parent Process
+	 */
+	/* runCommand(command, numCommandArgs); */
+	waitpid(pid, NULL, 0);
+	exit(0);
+	return recurseProcessInput(input, numArgs, currentArg + i, usedPipe ? secondPipe : NULL);
+    }
+    return 0;
+}
+
+char checkPipeRedir(char * input){
+    if(strcmp(input, "<") == 0){
+	return 0;
+    }
+    if(strcmp(input, ">") == 0){
+	return 1;
+    }
+    if(strcmp(input, ">>") == 0){
+	return 2;
+    }
+    if(strcmp(input, "|") == 0){
+	return 3;
+    }
+    return -1;
+}
+
+void runCommand(char **input, unsigned char numArgs){
+    /* if(strcmp(*input, "listjobs") == 0){ */
+    /* 	listJobs(&jobsList); */
+    /* 	freeInput(input, numArgs); */
+    /* 	exit(0); */
+    /* 	/\* return 1; *\/ */
+    /* } */
+    /* if(strcmp(*input, "fg") == 0){ */
+    /* 	foregroundProcess(input); */
+    /* 	freeInput(input, numArgs); */
+    /* 	exit(0); */
+    /* 	/\* return 1; *\/ */
+    /* } */
+    if(execvp(*(input), input) == -1){
+	fprintf(stderr, "Command not found\n");
+	exit(1);
+    }
+}
+
+void foregroundProcess(char **input){
+    char * ptr;
+    int procID = strtol(*(input + 1), &ptr, 10);
+    if(procID == 0){
+	printf("Enter a valid process ID\n");
+    }else{
+	pid_t pid = deletePID(&jobsList, (pid_t)procID);
+	if(pid == -1){
+	    printf("PID not found\n");
+	}else{
+	    int status;
+	    waitpid(pid, &status, 0);
+	}
+    }
+}
+
+void directFrom(char * file){
+    int fd = open(file, O_RDONLY);
+    dup2(fd, 0);
+    close(fd);
+}
+
+void directTo(char * file, char append){
+    int fd;
+    if(append){
+	fd = open(file, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+    }else{
+	fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+    }
+    dup2(fd, 1);
+    close(fd);
+}
+
+void pipeTo(int * pipe){
+    close(1);
+    dup2(*(pipe + 1), 1);
+    close(*(pipe));
+}
+
+void pipeFrom(int * pipe){
+    close(0);
+    dup2(*(pipe), 0);
+    close(*(pipe + 1));
+}
+
+void normalPipe(){
+    /* close(1); */
+    /* close(0); */
+    /* dup2(stdin, 0); */
+    /* dup2(stdout, 1); */
+}
+
+void freeInput(char **input, int numArgs){
+    int i = 0;
+    while(i < numArgs && *(input + i) != NULL){
+    	free(*(input + i));
+    	++ i;
     }
 }
 
@@ -79,116 +324,4 @@ char parseInput(char * input){
 	++ i;
     }
     return processInput(arguments, numArgs);
-    /* if(*(arguments[numArgs - 1]) == '&'){ */
-    /* 	(arguments[numArgs - 1]) = NULL; */
-    /* 	return runCommand(arguments, numArgs, 1); */
-    /* }else{ */
-    /* 	return runCommand(arguments, numArgs, 0); */
-    /* } */
-}
-
-char processInput(char **input, unsigned char numArgs){
-    char background = *(input + numArgs - 1) == '&';
-    
-    pid_t pid = fork();
-    if(pid == 0){
-	directTo(input, numArgs, 0);
-	if(execvp(*(input), input) == -1){
-	    fprintf(stderr, "Command not found\n");
-	    exit(0);
-	}
-    }else{
-	freeInput(input, numArgs);
-	waitpid(pid, NULL, 0);
-    }
-    return 1;
-}
-
-char runCommand(char **input, unsigned char numArgs, char background){
-    if(strcmp(*input, "listjobs") == 0){
-	listJobs(&jobsList);
-	freeInput(input, numArgs);
-	return 1;
-    }
-    if(strcmp(*input, "fg") == 0){
-	foregroundProcess(input);
-	freeInput(input, numArgs);
-	return 1;
-    }
-    if(strcmp(*input, "quit") == 0){
-	deleteJobsList(&jobsList);
-	freeInput(input, numArgs);
-	return 0;
-    }
-    pid_t pid = fork();
-    if(pid == -1){
-	fprintf(stderr, "Fork failed\n");
-	exit(1);
-    }
-    if(pid == 0){
-	/*
-	  Child process
-	*/
-	if(execvp(*(input), input) == -1){
-	    fprintf(stderr, "Command not found\n");
-	    exit(0);
-	}
-    }else{
-	if(background){
-	    insert(&jobsList, pid, *input);
-	}else{
-	    int status;
-	    waitpid(pid, &status, 0);
-	}
-	freeInput(input, numArgs);
-    }
-    return 1;
-}
-
-void foregroundProcess(char **input){
-    char * ptr;
-    int procID = strtol(*(input + 1), &ptr, 10);
-    if(procID == 0){
-	printf("Enter a valid process ID\n");
-    }else{
-	pid_t pid = deletePID(&jobsList, (pid_t)procID);
-	if(pid == -1){
-	    printf("PID not found\n");
-	}else{
-	    int status;
-	    waitpid(pid, &status, 0);
-	}
-    }
-}
-
-void directFrom(char **input, int numArgs){
-    int fd = open(*(input + numArgs - 1), O_RDONLY);
-    /* close(0); */
-    dup2(fd, 0);
-    close(fd);
-    free(*(input + numArgs - 2));
-    free(*(input + numArgs - 1));
-    *(input + numArgs - 2) = NULL;
-}
-
-void directTo(char **input, int numArgs, int append){
-    int fd;
-    if(append){
-	fd = open(*(input + numArgs - 1), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
-    }else{
-	fd = open(*(input + numArgs - 1), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
-    }
-    dup2(fd, 1);
-    close(fd);
-    free(*(input + numArgs - 2));
-    free(*(input + numArgs - 1));
-    *(input + numArgs - 2) = NULL;
-}
-
-void freeInput(char **input, int numArgs){
-    int i = 0;
-    while(i < numArgs){
-    	free(*(input + i));
-    	++ i;
-    }
 }

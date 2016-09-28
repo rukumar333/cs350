@@ -66,7 +66,8 @@ void listJobs(JobsList * jobsList){
     while(it != NULL){
 	pid_t pid = waitpid(it->data, &status, WNOHANG);
 	if(pid < 0){
-	    printf("Error in listJobs()\n");
+	    printf("Error in listJobs(): %d\n", pid);
+	    /* printf(pid) */
 	    return;
 	}
 	if(pid == 0){
