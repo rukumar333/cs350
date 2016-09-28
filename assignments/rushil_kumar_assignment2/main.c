@@ -85,33 +85,43 @@ char processInput(char **input, unsigned char numArgs){
     /* signal(SIGCHLD, handler); */
     if(pid == 0){
 	//Child Process
-	return recurseProcessInput(input, numArgs, 0, NULL);	
+	return recurseProcessInput(input, numArgs, 0, NULL);
+	exit(0);
     }else{
 	//Parent Process
 	if(background){
 	    insert(&jobsList, pid, *input);
 	}else{
 	    int status;
+	    /* printf("Waiting\n"); */
 	    waitpid(pid, &status, 0);
+	    /* printf("Finished\n"); */
 	}
     }
     return 1;
 }
 
-char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int firstPipe[2]){
+char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int * firstPipe){
+    char useInputPipe = 0;
+    char useOutputPipe = 0;
+    /* printf("currentArg: %d\n", currentArg); */
+    /* printf("currentArg: %s\n", *(input + currentArg)); */
+    /* printf("numArgs: %d\n", numArgs); */
     if(currentArg >= numArgs){
-	return 0;
+	freeInput(input, numArgs);
+	exit(0);
     }
-    printf("Current arg: %s\n", *(input + currentArg));
-    if(firstPipe != NULL){
+    if(firstPipe != NULL){	
 	//Set input from pipe
-	pipeFrom(firstPipe);
+	useInputPipe = 1;
+	/* pipeFrom(firstPipe); */
     }
     char * command[numArgs + 1 - currentArg];
     unsigned char numCommandArgs = 0;    
     int i = 0;
-    char status;
-    while(i < numArgs && (status = checkPipeRedir(*(input + currentArg + i))) == -1){
+    char status = checkPipeRedir(*(input + currentArg + i));
+    while(currentArg + i < numArgs && (status = checkPipeRedir(*(input + currentArg + i))) == -1){
+    /* while(i < numArgs */
 	size_t length = strlen(*(input + currentArg + i));
 	command[i] = (char *)malloc(length * sizeof(char) + 1);
 	*(command[i] + length) = '\0';
@@ -121,7 +131,7 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
     }
     command[i] = NULL;
     int secondPipe[2];
-    char usedPipe = 0;
+    /* char usedPipe = 0; */
     switch(status){
     case 0:
 	//Set input from file
@@ -146,8 +156,9 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 		    perror("pipe");
 		    exit(1);
 		}
-		pipeTo(secondPipe);
-		usedPipe = 1;
+		/* pipeTo(secondPipe); */
+		useOutputPipe = 1;
+		/* usedPipe = 1; */
 		i = i + 1;
 		break;		
 	    }
@@ -166,13 +177,13 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	break;
     case 3:
 	//Set output to pipe
-	printf("Setting output to pipe\n");
 	if(pipe(secondPipe) == -1){
 	    perror("pipe");
 	    exit(1);
 	}
-	pipeTo(secondPipe);
-	usedPipe = 1;
+	useOutputPipe = 1;
+	/* pipeTo(secondPipe); */	
+	/* usedPipe = 1; */
 	i = i + 1;
 	break;
     }
@@ -186,33 +197,55 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	  Child Process
 	 */
 	/* recurseProcessInput(input, numArgs, currentArg + i, usedPipe ? secondPipe : NULL); */
+	if(useInputPipe){
+	    pipeFrom(firstPipe);
+	}
+	if(useOutputPipe){
+	    pipeTo(secondPipe);
+	}
+	/* printf("PID: %d -> Command: %s\n", getpid(), *command); */
 	runCommand(command, numCommandArgs);
     }else{
 	/*
 	  Parent Process
 	 */
-	/* runCommand(command, numCommandArgs); */
+	freeInput(command, numCommandArgs);
+	close(*(secondPipe + 1));
 	waitpid(pid, NULL, 0);
+	if(useOutputPipe){
+	    recurseProcessInput(input, numArgs, currentArg + i, secondPipe);
+	}else{
+	    recurseProcessInput(input, numArgs, currentArg + i, NULL);	    
+	}
+	/* printf("Exiting recursive\n"); */
+	freeInput(input, numArgs);
 	exit(0);
-	return recurseProcessInput(input, numArgs, currentArg + i, usedPipe ? secondPipe : NULL);
+	/* return recurseProcessInput(input, numArgs, currentArg + i, useOutputPipe != 1 ? secondPipe : NULL); */
     }
+    
     return 0;
 }
 
 char checkPipeRedir(char * input){
+    char val = -1;
     if(strcmp(input, "<") == 0){
-	return 0;
+	val = 0;
+	/* return 0; */
     }
     if(strcmp(input, ">") == 0){
-	return 1;
+	val = 1;
+	/* return 1; */
     }
     if(strcmp(input, ">>") == 0){
-	return 2;
+	val = 2;
+	/* return 2; */
     }
     if(strcmp(input, "|") == 0){
-	return 3;
+	val = 3;
+	/* return 3; */
     }
-    return -1;
+    return val;
+    /* return -1; */
 }
 
 void runCommand(char **input, unsigned char numArgs){
