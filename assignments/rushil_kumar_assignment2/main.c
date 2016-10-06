@@ -59,9 +59,8 @@ void runShell(){
 
 char processInput(char **input, unsigned char numArgs){
     char status = handleProgramCommands(input, numArgs);
-    if(status != -1){
+    if(status != -1)
 	return status;
-    }
     char background = **(input + numArgs - 1) == '&';
     if(background){
 	free(*(input + numArgs - 1));
@@ -74,11 +73,9 @@ char processInput(char **input, unsigned char numArgs){
     	exit(1);
     }
     if(pid == 0){
-	//Child Process
 	return recurseProcessInput(input, numArgs, 0, NULL);
 	exit(0);
     }else{
-	//Parent Process
 	if(background){
 	    insert(&jobsList, pid, *input);
 	}else{
@@ -150,20 +147,12 @@ void forkParentChild(char **input, unsigned char numArgs, unsigned char currentA
     	exit(1);
     }
     if(pid == 0){
-	/*
-	  Child Process
-	*/
 	if(firstPipe != NULL){
 	    pipeFrom(firstPipe);
-	}
 	if(useOutputPipe){
 	    pipeTo(secondPipe);
-	}
 	runCommand(command, numCommandArgs);
     }else{
-	/*
-	  Parent Process
-	*/
 	freeInput(command, numCommandArgs);
 	close(*(secondPipe + 1));
 	if(waitpid(pid, NULL, 0) == -1){
@@ -172,12 +161,11 @@ void forkParentChild(char **input, unsigned char numArgs, unsigned char currentA
 	}
 	if(useOutputPipe){
 	    recurseProcessInput(input, numArgs, currentArg, secondPipe);
-	}else{
-	    recurseProcessInput(input, numArgs, currentArg, NULL);	    
-	}
+	else
+	    recurseProcessInput(input, numArgs, currentArg, NULL);
 	freeInput(input, numArgs);
 	exit(0);
-    }    
+    }
 }
 
 unsigned char setInputOutput(char **input, unsigned char numArgs, unsigned char currentArg, char status, char * useOutputPipe){
@@ -292,18 +280,15 @@ void freeInput(char **input, int numArgs){
 }
 
 char parseInput(char * input){
-    if(*(input) == '\n'){
+    if(*(input) == '\n')
 	return 1;
-    }
     unsigned char numArgs = 1;
     int i = 0;
     while(*(input + i) != '\0'){
-	if(*(input + i) == ' '){
+	if(*(input + i) == ' ')
 	    ++ numArgs;
-	}
-	if(*(input + i) == '\n'){
+	if(*(input + i) == '\n')
 	    *(input + i) = '\0';
-	}
 	++ i;
     }
     char * arguments[numArgs + 1];
