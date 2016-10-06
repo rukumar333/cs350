@@ -147,9 +147,9 @@ void forkParentChild(char **input, unsigned char numArgs, unsigned char currentA
     	exit(1);
     }
     if(pid == 0){
-	if(firstPipe != NULL){
+	if(firstPipe != NULL)
 	    pipeFrom(firstPipe);
-	if(useOutputPipe){
+	if(useOutputPipe)
 	    pipeTo(secondPipe);
 	runCommand(command, numCommandArgs);
     }else{
@@ -159,7 +159,7 @@ void forkParentChild(char **input, unsigned char numArgs, unsigned char currentA
 	    fprintf(stderr, "waitpid failed\n");
 	    exit(1);
 	}
-	if(useOutputPipe){
+	if(useOutputPipe)
 	    recurseProcessInput(input, numArgs, currentArg, secondPipe);
 	else
 	    recurseProcessInput(input, numArgs, currentArg, NULL);
