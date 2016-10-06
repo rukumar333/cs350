@@ -18,6 +18,7 @@ void runShell();
 char parseInput(char * input);
 char processInput(char **input, unsigned char numArgs);
 char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int pipe[2]);
+char handleProgramCommands(char **input, unsigned char numArgs);
 char checkPipeRedir(char * input);
 void runCommand(char **input, unsigned char numArgs);
 void handler(int sig);
@@ -56,6 +57,38 @@ void runShell(){
 }
 
 char processInput(char **input, unsigned char numArgs){
+    char status = handleProgramCommands(input, numArgs);
+    if(status != -1){
+	return status;
+    }
+    char background = **(input + numArgs - 1) == '&';
+    if(background){
+	free(*(input + numArgs - 1));
+	*(input + numArgs - 1) = NULL;
+	-- numArgs;
+    }
+    pid_t pid;
+    if((pid = fork()) == -1){
+	fprintf(stderr, "Fork failed\n");
+    	exit(1);
+    }
+    if(pid == 0){
+	//Child Process
+	return recurseProcessInput(input, numArgs, 0, NULL);
+	exit(0);
+    }else{
+	//Parent Process
+	if(background){
+	    insert(&jobsList, pid, *input);
+	}else{
+	    int status;
+	    waitpid(pid, &status, 0);
+	}
+    }
+    return 1;
+}
+
+char handleProgramCommands(char **input, unsigned char numArgs){
     if(strcmp(*input, "listjobs") == 0){
 	listJobs(&jobsList);
 	freeInput(input, numArgs);
@@ -71,42 +104,12 @@ char processInput(char **input, unsigned char numArgs){
 	freeInput(input, numArgs);
 	return 0;
     }
-    char background = **(input + numArgs - 1) == '&';
-    if(background){
-	free(*(input + numArgs - 1));
-	*(input + numArgs - 1) = NULL;
-	-- numArgs;
-    }
-    pid_t pid;
-    if((pid = fork()) == -1){
-	fprintf(stderr, "Fork failed\n");
-    	exit(1);
-    }
-    /* signal(SIGCHLD, handler); */
-    if(pid == 0){
-	//Child Process
-	return recurseProcessInput(input, numArgs, 0, NULL);
-	exit(0);
-    }else{
-	//Parent Process
-	if(background){
-	    insert(&jobsList, pid, *input);
-	}else{
-	    int status;
-	    /* printf("Waiting\n"); */
-	    waitpid(pid, &status, 0);
-	    /* printf("Finished\n"); */
-	}
-    }
-    return 1;
+    return -1;
 }
 
 char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int * firstPipe){
     char useInputPipe = 0;
     char useOutputPipe = 0;
-    /* printf("currentArg: %d\n", currentArg); */
-    /* printf("currentArg: %s\n", *(input + currentArg)); */
-    /* printf("numArgs: %d\n", numArgs); */
     if(currentArg >= numArgs){
 	freeInput(input, numArgs);
 	exit(0);
@@ -114,7 +117,6 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
     if(firstPipe != NULL){	
 	//Set input from pipe
 	useInputPipe = 1;
-	/* pipeFrom(firstPipe); */
     }
     char * command[numArgs + 1 - currentArg];
     unsigned char numCommandArgs = 0;    
@@ -249,18 +251,6 @@ char checkPipeRedir(char * input){
 }
 
 void runCommand(char **input, unsigned char numArgs){
-    /* if(strcmp(*input, "listjobs") == 0){ */
-    /* 	listJobs(&jobsList); */
-    /* 	freeInput(input, numArgs); */
-    /* 	exit(0); */
-    /* 	/\* return 1; *\/ */
-    /* } */
-    /* if(strcmp(*input, "fg") == 0){ */
-    /* 	foregroundProcess(input); */
-    /* 	freeInput(input, numArgs); */
-    /* 	exit(0); */
-    /* 	/\* return 1; *\/ */
-    /* } */
     if(execvp(*(input), input) == -1){
 	fprintf(stderr, "Command not found\n");
 	exit(1);
