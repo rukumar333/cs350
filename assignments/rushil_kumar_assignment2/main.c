@@ -122,8 +122,8 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
     unsigned char numCommandArgs = 0;    
     int i = 0;
     char status = checkPipeRedir(*(input + currentArg + i));
+    //Move commands into array of c-style strings
     while(currentArg + i < numArgs && (status = checkPipeRedir(*(input + currentArg + i))) == -1){
-    /* while(i < numArgs */
 	size_t length = strlen(*(input + currentArg + i));
 	command[i] = (char *)malloc(length * sizeof(char) + 1);
 	*(command[i] + length) = '\0';
@@ -131,7 +131,8 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	++ i;
 	++ numCommandArgs;
     }
-    command[i] = NULL;
+    //Null terminate list of commands
+    command[numCommandArgs] = NULL;
     int secondPipe[2];
     /* char usedPipe = 0; */
     switch(status){
@@ -160,7 +161,6 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 		}
 		/* pipeTo(secondPipe); */
 		useOutputPipe = 1;
-		/* usedPipe = 1; */
 		i = i + 1;
 		break;		
 	    }
@@ -184,8 +184,6 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	    exit(1);
 	}
 	useOutputPipe = 1;
-	/* pipeTo(secondPipe); */	
-	/* usedPipe = 1; */
 	i = i + 1;
 	break;
     }
@@ -198,14 +196,12 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	/*
 	  Child Process
 	 */
-	/* recurseProcessInput(input, numArgs, currentArg + i, usedPipe ? secondPipe : NULL); */
 	if(useInputPipe){
 	    pipeFrom(firstPipe);
 	}
 	if(useOutputPipe){
 	    pipeTo(secondPipe);
 	}
-	/* printf("PID: %d -> Command: %s\n", getpid(), *command); */
 	runCommand(command, numCommandArgs);
     }else{
 	/*
@@ -219,13 +215,65 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	}else{
 	    recurseProcessInput(input, numArgs, currentArg + i, NULL);	    
 	}
-	/* printf("Exiting recursive\n"); */
 	freeInput(input, numArgs);
 	exit(0);
-	/* return recurseProcessInput(input, numArgs, currentArg + i, useOutputPipe != 1 ? secondPipe : NULL); */
     }
-    
     return 0;
+}
+
+void setInputOuput(char **input, unsigned char currentArg, char status){
+    switch(status){
+    case 0:
+	//Set input from file
+	directFrom(*(input + currentArg + i + 1));
+	//Set output to pipe
+	if(currentArg + i + 2 < numArgs){
+	    char innerStatus = checkPipeRedir(*(input + currentArg + i + 2));
+	    switch(innerStatus){
+	    case 1:
+		//Set output to file w/o append
+		directTo(*(input + currentArg + i + 3), 0);
+		i = i + 2;
+		break;
+	    case 2:
+		//Set output to file w/ append
+		directTo(*(input + currentArg + i + 3), 1);
+		i = i + 2;
+		break;
+	    case 3:
+		//Set output to pipe
+		if(pipe(secondPipe) == -1){
+		    perror("pipe");
+		    exit(1);
+		}
+		/* pipeTo(secondPipe); */
+		useOutputPipe = 1;
+		i = i + 1;
+		break;		
+	    }
+	}
+	i = i + 2;
+	break;
+    case 1:
+	//Set output to file w/o append
+	directTo(*(input + currentArg + i + 1), 0);
+	i = i + 2;
+	break;
+    case 2:
+	//Set output to file w/ append
+	directTo(*(input + currentArg + i + 1), 1);
+	i = i + 2;
+	break;
+    case 3:
+	//Set output to pipe
+	if(pipe(secondPipe) == -1){
+	    perror("pipe");
+	    exit(1);
+	}
+	useOutputPipe = 1;
+	i = i + 1;
+	break;
+    }
 }
 
 char checkPipeRedir(char * input){
