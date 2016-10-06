@@ -18,6 +18,7 @@ void runShell();
 char parseInput(char * input);
 char processInput(char **input, unsigned char numArgs);
 char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int pipe[2]);
+void forkParentChild(char **input, unsigned char numArgs, unsigned char currentArg, char useOutputPipe, int * firstPipe, int * secondPipe, char **command, unsigned char numCommandArgs);
 unsigned char setInputOutput(char **input, unsigned char numArgs, unsigned char currentArg, char status, char * useInputPipe);
 char handleProgramCommands(char **input, unsigned char numArgs);
 char checkPipeRedir(char * input);
@@ -108,15 +109,10 @@ char handleProgramCommands(char **input, unsigned char numArgs){
 }
 
 char recurseProcessInput(char **input, unsigned char numArgs, unsigned char currentArg, int * firstPipe){
-    char useInputPipe = 0;
     char useOutputPipe = 0;
     if(currentArg >= numArgs){
 	freeInput(input, numArgs);
 	exit(0);
-    }
-    if(firstPipe != NULL){	
-	//Set input from pipe
-	useInputPipe = 1;
     }
     char * command[numArgs + 1 - currentArg];
     unsigned char numCommandArgs = 0;    
@@ -140,6 +136,11 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	    exit(1);
 	}
     }
+    forkParentChild(input, numArgs, currentArg, useOutputPipe, firstPipe, secondPipe, command, numCommandArgs);
+    return 0;
+}
+
+void forkParentChild(char **input, unsigned char numArgs, unsigned char currentArg, char useOutputPipe, int * firstPipe, int * secondPipe, char **command, unsigned char numCommandArgs){
     pid_t pid;
     if((pid = fork()) == -1){
     	fprintf(stderr, "Fork failed\n");
@@ -148,7 +149,7 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
     if(pid == 0){
 	/*
 	  Child Process
-	 */
+	*/
 	if(firstPipe != NULL){
 	    pipeFrom(firstPipe);
 	}
@@ -159,7 +160,7 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
     }else{
 	/*
 	  Parent Process
-	 */
+	*/
 	freeInput(command, numCommandArgs);
 	close(*(secondPipe + 1));
 	waitpid(pid, NULL, 0);
@@ -170,11 +171,8 @@ char recurseProcessInput(char **input, unsigned char numArgs, unsigned char curr
 	}
 	freeInput(input, numArgs);
 	exit(0);
-    }
-    return 0;
+    }    
 }
-
-void handleParent(char **input, unsigned char numArgs, unsigned char currentArg, )
 
 unsigned char setInputOutput(char **input, unsigned char numArgs, unsigned char currentArg, char status, char * useOutputPipe){
     switch(status){
