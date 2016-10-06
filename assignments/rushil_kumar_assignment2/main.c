@@ -83,7 +83,10 @@ char processInput(char **input, unsigned char numArgs){
 	    insert(&jobsList, pid, *input);
 	}else{
 	    int status;
-	    waitpid(pid, &status, 0);
+	    if(waitpid(pid, &status, 0) == -1){
+		fprintf(stderr, "waitpid failed\n");
+		exit(1);	
+	    }
 	}
     }
     return 1;
@@ -163,7 +166,10 @@ void forkParentChild(char **input, unsigned char numArgs, unsigned char currentA
 	*/
 	freeInput(command, numCommandArgs);
 	close(*(secondPipe + 1));
-	waitpid(pid, NULL, 0);
+	if(waitpid(pid, NULL, 0) == -1){
+	    fprintf(stderr, "waitpid failed\n");
+	    exit(1);
+	}
 	if(useOutputPipe){
 	    recurseProcessInput(input, numArgs, currentArg, secondPipe);
 	}else{
@@ -240,7 +246,10 @@ void foregroundProcess(char **input){
 	    printf("PID not found\n");
 	}else{
 	    int status;
-	    waitpid(pid, &status, 0);
+	    if(waitpid(pid, &status, 0) == -1){
+		fprintf(stderr, "waitpid failed\n");
+		exit(1);
+	    }
 	}
     }
 }

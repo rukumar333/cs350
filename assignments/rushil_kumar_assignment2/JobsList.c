@@ -153,18 +153,6 @@ void deleteListN(LinkedListN * list){
 }
 
 void deleteNodePID(LinkedListPID * list, NodePID * node){
-    /* if(node == list->head && node == list->head){ */
-    /* 	list->head = NULL; */
-    /* 	list->tail = NULL; */
-    /* } */
-    /* if(node == list->head){ */
-    /* 	if(node == list->tail){ */
-    /* 	    list->head = NULL; */
-    /* 	    list->tail = NULL;    */
-    /* 	}else{ */
-	    
-    /* 	} */
-    /* } */
     if(node->previous != NULL){	
 	node->previous->next = node->next;
 	if(node == list->tail){
@@ -186,16 +174,6 @@ void deleteNodePID(LinkedListPID * list, NodePID * node){
 }
 
 void deleteNodeN(LinkedListN * list, NodeN * node){
-    /* if(node->previous == NULL && node->next == NULL){ */
-    /* 	list->head = NULL; */
-    /* 	list->tail = NULL; */
-    /* } */
-    /* if(node->previous != NULL){ */
-    /* 	node->previous->next = node->next; */
-    /* } */
-    /* if(node->next != NULL){ */
-    /* 	node->next->previous = node->previous;	 */
-    /* } */
     if(node->previous != NULL){	
 	node->previous->next = node->next;
 	if(node == list->tail){
