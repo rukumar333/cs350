@@ -10,28 +10,29 @@ MODULE_LICENSE("DUAL BSD/GPL");
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos){
   struct task_struct *p;
   char str[count];
-  int len;
-  for_each_process(p){
-    char pid_string[25];
-    char ppid_string[25];
-    char cpu_string[10];
-    len = strlen(str);
-    if(len + 60 >= count)
-      return -EINVAL;
-    snprintf(pid_string, 25, "%d", p->pid);
-    strcat(str, "PID=");
-    strcat(str, pid_string);
-    strcat(str, " ");
-    snprintf(ppid_string, 25, "%d", p->parent->pid);
-    strcat(str, "PPID=");
-    strcat(str, ppid_string);
-    strcat(str, " ");
-    snprintf(cpu_string, 10, "%d", task_cpu(p));
-    strcat(str, "CPU=");
-    strcat(str, cpu_string);
-    strcat(str, " ");    
-  }
+  int len = 0;
+  if(len + 60 < count){
+    for_each_process(p){
+      char pid_string[25];
+      char ppid_string[25];
+      char cpu_string[10];
+      len = strlen(str);
+      snprintf(pid_string, 25, "%d", p->pid);
+      strcat(str, "PID=");
+      strcat(str, pid_string);
+      strcat(str, " ");
+      snprintf(ppid_string, 25, "%d", p->parent->pid);
+      strcat(str, "PPID=");
+      strcat(str, ppid_string);
+      strcat(str, " ");
+      snprintf(cpu_string, 10, "%d", task_cpu(p));
+      strcat(str, "CPU=");
+      strcat(str, cpu_string);
+      strcat(str, " ");    
+    }
+  }  
   len = strlen(str);
+  printk(KERN_DEBUG "%s\n", str);
   if(copy_to_user(buf, str, len))
     return -EINVAL;
   *ppos = len;  
