@@ -20,6 +20,7 @@ static char *buffer = NULL;
 
 static void get_processes_info(){
     int len = 0;
+    struct task_struct *p;
     for_each_process(p){
 	if(len + 150 >= BUFFER_LENGTH){
 	    BUFFER_LENGTH = BUFFER_LENGTH * 2;
@@ -91,88 +92,22 @@ static void parse_state(struct task_struct *p){
 };
 
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos){
-    struct task_struct *p;
-    char *str = kmalloc(sizeof(char) * (count), GFP_KERNEL);
-    unsigned long len = 0;
-    if(!str){
-	printk(KERN_ALERT "ERROR with allocating memory");
-	return 0;
+    int len;
+    if(*ppos == 0){
+	get_processes_info();
     }
-    *str = '\0';
-    printk(KERN_ALERT "Count: %lu\n", count);
-    if(*ppos != 0)
+    len = strlen(buffer);
+    if(*ppos >= len){
+	*ppos = 0;
 	return 0;
-    for_each_process(p){
-	printk(KERN_ALERT "Length: %lu\n", len);
-	if(len + 100 < count){
-	    char pid_string[25];
-	    char ppid_string[25];
-	    char cpu_string[10];
-	    long state = p->state;
-	    long exit_state = p->exit_state;
-	    snprintf(pid_string, 25, "%d", p->pid);
-	    strcat(str, "PID=");
-	    strcat(str, pid_string);
-	    strcat(str, " ");
-	    snprintf(ppid_string, 25, "%d", p->parent->pid);
-	    strcat(str, "PPID=");
-	    strcat(str, ppid_string);
-	    strcat(str, " ");
-	    snprintf(cpu_string, 10, "%d", task_cpu(p));
-	    strcat(str, "CPU=");
-	    strcat(str, cpu_string);
-	    strcat(str, " ");
-	    len = strlen(str);
-	    /* strcat(str, "STATE="); */
-	    /* if(state == TASK_RUNNING){ */
-	    /* 	strcat(str, "TASK_RUNNING,"); */
-	    /* }else{	 */
-	    /* 	if(state & TASK_INTERRUPTIBLE) */
-	    /* 	  strcat(str, "TASK_INTERRUPTIBLE,"); */
-	    /* 	if(state & TASK_UNINTERRUPTIBLE) */
-	    /* 	  strcat(str, "TASK_UNINTERRUPTIBLE,"); */
-	    /* 	if(state & __TASK_STOPPED) */
-	    /* 	  strcat(str, "TASK_STOPPED,"); */
-	    /* 	if(state & __TASK_TRACED) */
-	    /* 	  strcat(str, "TASK_TRACED,"); */
-	    /* 	if(exit_state & EXIT_DEAD){ */
-	    /* 	  if(exit_state & EXIT_ZOMBIE){ */
-	    /* 	    strcat(str, "EXIT_TRACE,"); */
-	    /* 	  }else{ */
-	    /* 	    strcat(str, "EXIT_DEAD,"); */
-	    /* 	  } */
-	    /* 	} */
-	    /* 	if(exit_state & EXIT_ZOMBIE) */
-	    /* 	  strcat(str, "EXIT_ZOMBIE"); */
-	    /* 	if(state & TASK_DEAD) */
-	    /* 	  strcat(str, "TASK_DEAD,"); */
-	    /* 	if(state & TASK_WAKEKILL) */
-	    /* 	  strcat(str, "TASK_WAKEKILL,"); */
-	    /* 	if(state & TASK_WAKING) */
-	    /* 	  strcat(str, "TASK_WAKING,"); */
-	    /* 	if(state & TASK_PARKED) */
-	    /* 	  strcat(str, "TASK_PARKED,"); */
-	    /* 	if(state & TASK_NOLOAD) */
-	    /* 	  strcat(str, "TASK_NOLOAD,"); */
-	    /* 	if(state & TASK_NEW) */
-	    /* 	  strcat(str, "TASK_NEW,"); */
-	    /* 	if(state & TASK_STATE_MAX) */
-	    /* 	  strcat(str, "TASK_STATE_MAX,"); */
-	    /* } */
-	    /* if(str[len - 1] == ','){ */
-	    /* 	str[len - 1] = '\0'; */
-	    /* } */
-	    /* strcat(str, "\n"); */
+    }else{
+	if(copy_to_user(buf, (buffer + *ppos), len)){
+	    printk(KERN_ERR "Unable to copy buffer to user space\n");
+	    return -EINVAL;
 	}
+	*ppos = *ppos + count;
+	return count;
     }
-    len = strlen(str);
-    if(copy_to_user(buf, str, len)){
-	kfree(str);
-	return -EINVAL;
-    }
-    kfree(str);
-    *ppos = len;
-    return len;
 }
 
 static const struct file_operations process_list_fops = {
