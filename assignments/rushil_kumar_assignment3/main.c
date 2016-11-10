@@ -23,5 +23,5 @@ int main(){
   }
   close(fd);
   free(buffer);
-  return 1;
+  return 0;
 }
