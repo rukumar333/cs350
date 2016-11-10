@@ -9,16 +9,17 @@
 int main(){
   int buffer_length = 500;
   /* char buffer[buffer_length] = ""; */
-  char *buffer = malloc(sizeof(char) * buffer_length);
-  memset(buffer, '\0', sizeof(char) * buffer_length);
-  printf("Opening device\n");
+  /* char *buffer = malloc(sizeof(char) * buffer_length); */
+  /* memset(buffer, '\0', sizeof(char) * buffer_length); */
+  char *buffer = calloc(sizeof(char), buffer_length);
+  /* printf("Opening device\n"); */
   int fd = open("/dev/process_list", O_RDONLY);
-  printf("Opened device\n");
+  /* printf("Opened device\n"); */
   int bytes_read = 1;
   while(bytes_read > 0){
-    int bytes_read = read(fd, buffer, buffer_length);
-    printf("Read device\n");
-    printf("%s\n", buffer);
+    bytes_read = read(fd, buffer, buffer_length);
+    printf("%s", buffer);
+    buffer[0] = '\0';
   }
   close(fd);
   free(buffer);
