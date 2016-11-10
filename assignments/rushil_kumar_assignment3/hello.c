@@ -4,22 +4,31 @@
 #include <linux/miscdevice.h>
 #include <linux/fs.h>
 #include <linux/kernel.h>
+#include <linux/slab.h>
 #include <asm/uaccess.h>
-MODULE_LICENSE("DUAL BSD/GPL");
+/* MODULE_LICENSE("DUAL BSD/GPL"); */
+MODULE_LICENSE("GPL");
 
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos){
   struct task_struct *p;
-  char str[count];
-  /* str[0] = '\0'; */
-  int len = 0;
-  /* if(len + 60 < count){ */
-    for_each_process(p){
+  char *str = kmalloc(sizeof(char) * (count), GFP_KERNEL);
+  unsigned long len = 0;
+  if(!str){
+    printk(KERN_ALERT "ERROR with allocating memory");
+    return 0;
+  }
+  *str = '\0';
+  printk(KERN_ALERT "Count: %lu\n", count);
+  if(*ppos != 0)
+    return 0;
+  for_each_process(p){
+    printk(KERN_ALERT "Length: %lu\n", len);
+    if(len + 100 < count){
       char pid_string[25];
       char ppid_string[25];
       char cpu_string[10];
-      /* long state = p->state; */
-      /* long exit_state = p->exit_state; */
-      len = strlen(str);
+      long state = p->state;
+      long exit_state = p->exit_state;
       snprintf(pid_string, 25, "%d", p->pid);
       strcat(str, "PID=");
       strcat(str, pid_string);
@@ -32,6 +41,7 @@ static ssize_t read_process_list(struct file * file, char * buf, size_t count, l
       strcat(str, "CPU=");
       strcat(str, cpu_string);
       strcat(str, " ");
+      len = strlen(str);
       /* strcat(str, "STATE="); */
       /* if(state == TASK_RUNNING){ */
       /* 	strcat(str, "TASK_RUNNING,"); */
@@ -73,11 +83,14 @@ static ssize_t read_process_list(struct file * file, char * buf, size_t count, l
       /* } */
       /* strcat(str, "\n"); */
     }
-  /* }   */
+  }
   len = strlen(str);
-  if(copy_to_user(buf, str, len))
+  if(copy_to_user(buf, str, len)){
+    kfree(str);
     return -EINVAL;
-  *ppos = len;  
+  }
+  kfree(str);
+  *ppos = len;
   return len;
 }
 
@@ -93,12 +106,12 @@ static struct miscdevice process_list = {
 };
 
 static int __init process_init(void){
-  struct task_struct *p;
   int ret;
+  printk(KERN_DEBUG "process_list mod initiated");
   /* for_each_process(p){ */
   /*   printk(KERN_DEBUG "PID: %d\n", (int)task_pid_nr(p)); */
   /* } */
-  ret = misc_register(&process_list);
+  ret = misc_register(&process_list);  
   if(ret)
     printk(KERN_ERR "Unable to register process_list misc device\n");
   return ret;
@@ -108,6 +121,6 @@ module_init(process_init);
 
 static void __exit process_exit(void){
   misc_deregister(&process_list);
-  /* printk(KERN_ALERT "Module exiting - process list\n"); */
+  printk(KERN_ALERT "Module exiting - process list\n");
 }
 module_exit(process_exit);

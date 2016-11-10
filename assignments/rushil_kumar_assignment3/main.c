@@ -4,13 +4,23 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <string.h>
 
 int main(){
-  int buffer_length = 1000000;
-  char buffer[buffer_length];  
+  int buffer_length = 500;
+  /* char buffer[buffer_length] = ""; */
+  char *buffer = malloc(sizeof(char) * buffer_length);
+  memset(buffer, '\0', sizeof(char) * buffer_length);
+  printf("Opening device\n");
   int fd = open("/dev/process_list", O_RDONLY);
-  int bytes_read = read(fd, buffer, buffer_length);
-  printf("%s\n", buffer);
+  printf("Opened device\n");
+  int bytes_read = 1;
+  while(bytes_read > 0){
+    int bytes_read = read(fd, buffer, buffer_length);
+    printf("Read device\n");
+    printf("%s\n", buffer);
+  }
   close(fd);
+  free(buffer);
   return 1;
 }
