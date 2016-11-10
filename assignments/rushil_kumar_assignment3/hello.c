@@ -10,12 +10,15 @@ MODULE_LICENSE("DUAL BSD/GPL");
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos){
   struct task_struct *p;
   char str[count];
+  /* str[0] = '\0'; */
   int len = 0;
   if(len + 60 < count){
     for_each_process(p){
       char pid_string[25];
       char ppid_string[25];
       char cpu_string[10];
+      long state = p->state;
+      long exit_state = p->exit_state;
       len = strlen(str);
       snprintf(pid_string, 25, "%d", p->pid);
       strcat(str, "PID=");
@@ -28,11 +31,50 @@ static ssize_t read_process_list(struct file * file, char * buf, size_t count, l
       snprintf(cpu_string, 10, "%d", task_cpu(p));
       strcat(str, "CPU=");
       strcat(str, cpu_string);
-      strcat(str, " ");    
+      strcat(str, " ");
+      strcat(str, "STATE=");
+      if(state == TASK_RUNNING){
+	strcat(str, "TASK_RUNNING,");
+      }else{	
+	if(state & TASK_INTERRUPTIBLE)
+	  strcat(str, "TASK_INTERRUPTIBLE,");
+	if(state & TASK_UNINTERRUPTIBLE)
+	  strcat(str, "TASK_UNINTERRUPTIBLE,");
+	if(state & __TASK_STOPPED)
+	  strcat(str, "TASK_STOPPED,");
+	if(state & __TASK_TRACED)
+	  strcat(str, "TASK_TRACED,");
+	if(exit_state & EXIT_DEAD){
+	  if(exit_state & EXIT_ZOMBIE){
+	    strcat(str, "EXIT_TRACE,");
+	  }else{
+	    strcat(str, "EXIT_DEAD,");
+	  }
+	}
+	if(exit_state & EXIT_ZOMBIE)
+	  strcat(str, "EXIT_ZOMBIE");
+	if(state & TASK_DEAD)
+	  strcat(str, "TASK_DEAD,");
+	if(state & TASK_WAKEKILL)
+	  strcat(str, "TASK_WAKEKILL,");
+	if(state & TASK_WAKING)
+	  strcat(str, "TASK_WAKING,");
+	if(state & TASK_PARKED)
+	  strcat(str, "TASK_PARKED,");
+	if(state & TASK_NOLOAD)
+	  strcat(str, "TASK_NOLOAD,");
+	if(state & TASK_NEW)
+	  strcat(str, "TASK_NEW,");
+	if(state & TASK_STATE_MAX)
+	  strcat(str, "TASK_STATE_MAX,");
+      }
+      /* if(str[len - 1] == ','){ */
+      /* 	str[len - 1] = '\0'; */
+      /* } */
+      /* strcat(str, "\n"); */
     }
   }  
   len = strlen(str);
-  printk(KERN_DEBUG "%s\n", str);
   if(copy_to_user(buf, str, len))
     return -EINVAL;
   *ppos = len;  
@@ -66,6 +108,6 @@ module_init(process_init);
 
 static void __exit process_exit(void){
   misc_deregister(&process_list);
-  printk(KERN_ALERT "Module exiting - process list\n");
+  /* printk(KERN_ALERT "Module exiting - process list\n"); */
 }
 module_exit(process_exit);
