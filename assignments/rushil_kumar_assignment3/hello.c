@@ -6,7 +6,6 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
-/* MODULE_LICENSE("DUAL BSD/GPL"); */
 MODULE_LICENSE("GPL");
 
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos){
