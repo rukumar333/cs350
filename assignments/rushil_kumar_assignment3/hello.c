@@ -10,29 +10,30 @@
 MODULE_LICENSE("GPL");
 
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos);
-static void get_processes_info(void);
+static char get_processes_info(void);
 static void parse_state(struct task_struct *p);
 static void __exit process_exit(void);
 static int __init process_init(void);
-static void resize_buffer(void);
+static char resize_buffer(void);
 
 static long BUFFER_LENGTH = 10000;
 static char *buffer = NULL;
 
-static void resize_buffer(void){
+static char resize_buffer(void){
   char *new_mem;
   printk(KERN_DEBUG "Resizing buffer");
   BUFFER_LENGTH = BUFFER_LENGTH * 2;
   new_mem = kcalloc(sizeof(char), BUFFER_LENGTH, GFP_KERNEL);
   if(new_mem == NULL){
-    
+      return 0;
   }
   strcpy(new_mem, buffer);
   /* kfree(buffer); */
   buffer = new_mem;
+  return 1;
 };
 
-static void get_processes_info(void){
+static char get_processes_info(void){
   int len = 0;
   struct task_struct *p;
   for_each_process(p){
@@ -40,7 +41,9 @@ static void get_processes_info(void){
     char ppid_string[25];
     char cpu_string[10];
     if(len + 150 >= BUFFER_LENGTH){
-      resize_buffer();
+	if(resize_buffer() == 0){
+	    return 0;
+	}
     }
     snprintf(pid_string, 25, "%d", p->pid);
     strcat(buffer, "PID=");
@@ -62,6 +65,7 @@ static void get_processes_info(void){
     strcat(buffer, "\n");
     len = strlen(buffer);
   }
+  return 1;
 };
 
 static void parse_state(struct task_struct *p){
@@ -106,10 +110,13 @@ static void parse_state(struct task_struct *p){
 };
 
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos){
-  int len;
+  int len;  
   printk(KERN_DEBUG "Offset: %llu\n", *ppos);
   if(*ppos == 0){
-    get_processes_info();
+      if(get_processes_info() == 0){
+	  printk(KERN_ERR "Error with reading process information\n");
+	  return -EINVAL;
+      }
   }
   len = strlen(buffer);
   if(*ppos >= len){

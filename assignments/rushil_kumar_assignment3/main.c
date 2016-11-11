@@ -8,13 +8,12 @@
 
 int main(){
   int buffer_length = 500;
-  /* char buffer[buffer_length] = ""; */
-  /* char *buffer = malloc(sizeof(char) * buffer_length); */
-  /* memset(buffer, '\0', sizeof(char) * buffer_length); */
   char *buffer = calloc(sizeof(char), buffer_length);
-  /* printf("Opening device\n"); */
   int fd = open("/dev/process_list", O_RDONLY);
-  /* printf("Opened device\n"); */
+  if(fd == -1){
+      printf("Error with reading device. Try running with sudo!\n");
+      return 0;
+  }
   int bytes_read = 1;
   while(bytes_read > 0){
     bytes_read = read(fd, buffer, buffer_length);
