@@ -28,7 +28,7 @@ static char resize_buffer(void){
       return 0;
   }
   strcpy(new_mem, buffer);
-  /* kfree(buffer); */
+  kfree(buffer);
   buffer = new_mem;
   return 1;
 };
@@ -91,7 +91,7 @@ static void parse_state(struct task_struct *p){
       }
     }
     if(exit_state & EXIT_ZOMBIE)
-      strcat(buffer, "EXIT_ZOMBIE");
+      strcat(buffer, "EXIT_ZOMBIE,");
     if(state & TASK_DEAD)
       strcat(buffer, "TASK_DEAD,");
     if(state & TASK_WAKEKILL)
@@ -111,7 +111,6 @@ static void parse_state(struct task_struct *p){
 
 static ssize_t read_process_list(struct file * file, char * buf, size_t count, loff_t * ppos){
   int len;  
-  printk(KERN_DEBUG "Offset: %llu\n", *ppos);
   if(*ppos == 0){
       if(get_processes_info() == 0){
 	  printk(KERN_ERR "Error with reading process information\n");
@@ -146,7 +145,6 @@ static struct miscdevice process_list = {
 static int __init process_init(void){
   int ret;
   printk(KERN_DEBUG "process_list mod initiated");
-  printk(KERN_ALERT "process_list mod initiated");
   buffer = kcalloc(sizeof(char), BUFFER_LENGTH, GFP_KERNEL);
   ret = misc_register(&process_list);
   if(ret)
@@ -159,6 +157,6 @@ module_init(process_init);
 static void __exit process_exit(void){
   misc_deregister(&process_list);
   kfree(buffer);
-  printk(KERN_ALERT "Module exiting - process list\n");
+  printk(KERN_DEBUG "Module exiting - process list\n");
 }
 module_exit(process_exit);
