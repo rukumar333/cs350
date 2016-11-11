@@ -24,6 +24,9 @@ static void resize_buffer(void){
   printk(KERN_DEBUG "Resizing buffer");
   BUFFER_LENGTH = BUFFER_LENGTH * 2;
   new_mem = kcalloc(sizeof(char), BUFFER_LENGTH, GFP_KERNEL);
+  if(new_mem == NULL){
+    
+  }
   strcpy(new_mem, buffer);
   /* kfree(buffer); */
   buffer = new_mem;
