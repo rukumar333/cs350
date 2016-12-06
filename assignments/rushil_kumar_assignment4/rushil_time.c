@@ -14,7 +14,7 @@ asmlinkage int sys_my_xtime(struct timespec *current_time){
   current_time->tv_sec = 0;
   current_time->tv_nsec = 0;
   ktime_get_ts(current_time);
-  printk(KERN_DEBUG "Time: %ld\n", current->tv_nsec);
+  printk(KERN_DEBUG "Time: %ld\n", current_time->tv_nsec);
   return 0;
 }
 
