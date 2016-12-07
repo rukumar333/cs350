@@ -23,7 +23,7 @@ char testSyscall(){
   ret = syscall(_sys_my_xtime_, my_timespec);
   if(ret < 0){
     /* perror("my_xtime()"); */
-    printf("ERROR: Syscall return value: %d\n",ret);
+    printf("ERROR: Syscall return value: %d, errno: %d\n",ret, errno);
     return -1;
   }
   printf("Time in nanoseconds: %ld\n", my_timespec.tv_nsec);
