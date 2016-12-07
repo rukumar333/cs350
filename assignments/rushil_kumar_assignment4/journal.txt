@@ -5,7 +5,12 @@ Returning no value
 - Compilation-> Warning: Control reaches end of non-void function
 - Value being returned repeatedly is 330.
 
-Deferencing null pointer
-- Does nothing
+Diving by Zero
+Image - dividing-by-zero.png
+- Leads to a segmentation fault.
+- The process calling the syscall gets preempted and is killed along with the syscall procedure.
 
-
+Deferencing a Null Pointer
+Image - deference-nullptr.png
+- The process calling the syscall gets preempted and is killed along with the syscall procedure.
+- Get message for unable to handle kernel NULL pointer deference.
