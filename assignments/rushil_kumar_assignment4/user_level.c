@@ -11,9 +11,9 @@ char testSyscall();
 void testBadCall(char code);
 
 int main(){
-  /* if(testSyscall() == -1) */
-  /*   return -1; */
-  testBadCall(3);
+  if(testSyscall() == -1)
+    return -1;
+  /* testBadCall(3); */
   return 0;
 }
 
