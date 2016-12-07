@@ -4,11 +4,10 @@
 #include <linux/printk.h>
 #include <linux/slab.h>
 #include <linux/stddef.h>
-#include <stdio.h>
 
-int divideByZero();
-int deferenceNullPtr();
-void useCLibraryFunc();
+int divideByZero(void);
+int deferenceNullPtr(void);
+void useCLibraryFunc(void);
 
 asmlinkage int sys_bad_call(char code){
   switch(code){
@@ -27,20 +26,20 @@ asmlinkage int sys_bad_call(char code){
   }
 }
 
-int divideByZero(){
+int divideByZero(void){
   int x = 0;
   int y = 10;
   return y / x;
 }
 
-int deferenceNullPtr(){
+int deferenceNullPtr(void){
   int *foo = NULL;
   int x = *foo;
   return x;
 }
 
-void useCLibraryFunc(){
-  printf("Hello world C Library printk\n");
+void useCLibraryFunc(void){
+  /* printf("Hello world C Library printk\n"); */
 };
 
 EXPORT_SYMBOL(sys_bad_call);
