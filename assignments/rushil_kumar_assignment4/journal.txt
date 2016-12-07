@@ -3,5 +3,9 @@ Using a C Library routine
 
 Returning no value
 - Compilation-> Warning: Control reaches end of non-void function
+- Value being returned repeatedly is 330.
+
+Deferencing null pointer
+- Does nothing
 
 
