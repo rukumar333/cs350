@@ -29,12 +29,18 @@ asmlinkage int sys_bad_call(char code){
 int divideByZero(void){
   int x = 0;
   int y = 10;
-  return y / x;
+  int z = y / x;
+  printk(KERN_DEBUG "Value of 10 / 0: %d\n", z);
+  return z;
 }
 
 int deferenceNullPtr(void){
   int *foo = NULL;
   int x = *foo;
+  printk(KERN_DEBUG "Null pointer deferenced value: %d\n", x);
+  printk(KERN_DEBUG "Writing to null pointed memory space\n");
+  *foo = 13;
+  printk(KERN_DEBUG "Value of null pointed memory: %d\n", *foo);
   return x;
 }
 
