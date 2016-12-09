@@ -45,6 +45,9 @@ int deferenceNullPtr(void){
 }
 
 void useCLibraryFunc(void){
+  /*
+    Unable to import C user space libraries
+   */
   /* printf("Hello world C Library printk\n"); */
 };
 
