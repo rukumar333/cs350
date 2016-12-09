@@ -20,6 +20,7 @@ for Mac machines.
 
 ----- Files ------
 makefile
+kernel-makefile.txt -> Modified kernel/Makefile
 rushil_time.c -> time syscall
 rushil_bad.c -> bad syscall code
 user_level.c -> user level code for time syscall
