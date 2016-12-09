@@ -17,7 +17,7 @@ int main(){
 char testSyscall(){
   struct timespec my_timespec;
   int ret;
-  ret = syscall(_sys_my_xtime_, my_timespec);
+  ret = syscall(_sys_my_xtime_, &my_timespec);
   if(ret < 0){
     /* perror("my_xtime()"); */
     printf("ERROR: Syscall return value: %d, errno: %d\n",ret, errno);

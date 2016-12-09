@@ -7,6 +7,13 @@
 #define _sys_bad_call_ 330
 #define CODE 3
 
+/*
+  CODE VALS
+  0 -> Dividing by zero
+  1 -> Deferencing nullptr
+  3 -> No return val from system call
+ */
+
 void testBadCall(char code);
 
 int main(){
