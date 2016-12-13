@@ -1,0 +1,622 @@
+* Threads
+** DONE 1. What are threads? How do they differ from processes? How are they similar?
+   Threads share the same address space but have their own program counters, stack, stack pointer, and registers.
+   Like processes, they each follow their own execution.
+
+** DONE 2. What state do threads share? What state is different?
+   They share opened file descriptors, signals, and signal handlers.
+   They do not share Thread IDs, priorities, and errno.
+
+** DONE 3. Why does context-switching between threads incur less overhead than between processes?
+   The full address space does not need to be switched over since the address space is being shared among the different
+   threads.
+
+** DONE 4. Briefly explain
+*** (a) User-level threads
+    These threads are not visible to the kernel and are only there at the individual process level.
+Therefore, they cannot be individually be scheduled by the kernel. They are executed when the
+whole process is in the CPU.
+
+*** (b) Kernel-level threads
+    These threads are visible to the kernel and can be scheduled individually by the kernel.
+
+*** (c) Local thread scheduling
+    When a process gets timeslice, it is divided up amongst the threads of that process. Only requires local knowledge
+of threads within the process. 
+
+*** (d) Global thread scheduling
+    In this case, the threads each receive a timeslice independent on their processes. Can only be implemented with
+kernel level threads. 
+
+** DONE 5. What are the benefits and disadvantages of using user-level and kernel-level threads?
+*** User-level
+**** Advantages
+     Kernel does not need to know global state of threads. Threads only execute when process is executing.
+**** Disadvantages
+     Threads cannot be scheduled at the thread level; they are limited by the process scheduling.
+
+*** Kernel-level
+**** Advantages
+     Threads can be scheduled at the thread level or at the process level: more flexibility.
+**** Disadvantages
+     Global state of all threads has to be kept in track.
+
+** DONE 6. What combinations or user/kernel threads and global/local scheduling are feasible and why?
+*** Global Scheduling   
+    Only kernel threads. For global scheduling, individual threads are scheduled for the CPU. The kernel only recognized kernel threads, not user level threads.
+*** Local Scheduling
+    Both kernel and user-level threads. Threads are ran based on the current process and the timeslice for it. At the user-level, only processes can be seen
+    so threads only run once the process is in. At kernel level, although kernel recognizes kernel threads, they can also be looked at based on the process running them.
+
+** TODO 7. What kind of applications benefit the most from kernel-level threads support? What kind of applications benefit most from user-level threads support? Explain why with examples?
+*** TODO Kernel-level Thread Applications  
+    Applications that contain threads that require different priorities would be better for kernel-level thread applications. This is because the
+    individual threads can be scheduled and so can have different priorities.
+*** TODO User-level Thread Applications    
+    Applications that contain threads that require about the same amount of priority would be better for user-level threads. This is because the
+    individual threads do not need to be scheduled and the kernel only needs to schedule time for the process.
+** DONE 8. Explain how a web server could use threads to improve concurrency when serving client requests.
+   Using multiple worker threads that each handle a request can help the web server handle multiple client requests. Therefore, if one client requests causes
+   blocking or issues, the other threads will not be blocked and the other client requests can be handled.
+
+** DONE 9. What happens if a thread in a multi-threaded process crashes? How can you improve the robustness (fault-tolerance) of a multi-threaded application?
+   If a thread in multi-threaded process crashes, then the whole process crashes. You can improve the robustness can running threads that can possibly crash
+   in separate processes and setting up forms of IPC for that thread.
+   
+** DONE 10. Event-driven programming
+*** DONE (a) What is the “event-driven” programming model?
+    One process runs all tasks. Functions are ran based on certain events occuring.
+*** DONE (b) What does the structure of a typical event-driven program look like?
+    while(1){
+       if(event1) do task1;
+       if(event2) do task2;
+       ...
+       if(eventn) do taskn;
+    }
+*** DONE (c) When would you prefer an event-driven programming model over a thread-based programming model?
+    Might prefer an event-driven model over a thread-based model if there is only one CPU and when executions
+    of tasks do not effect executions of subsequent executions or executions of other tasks.
+    
+** DONE 11. What is the problem with long-running event handlers? How do threads solve this problem?
+   If there are long running event handlers, those events will take longer to run so then the other events have to wait
+   longer to run next. By having separate threads for each event, the timeslice for each event can be individually scheduled.
+   
+** TODO 12. What type of applications would be more suitable for thread-based programming compared to event-driven programming?
+   Applications that are running on multiple CPU machines and that have longer event handlers. Also, applications whose different events may
+   have different priorities that each thread can have a scheduled timeslice based on priority. 
+
+** TODO 13. What are callbacks and what problems can they cause when used with threads?
+   Callbacks are functions that are passed to other functions as variables to be called within those functions. Callbacks are used within the same thread that called the initial function.
+   Therefore, it is difficult to pass callbacks amongst different threads.
+   
+** TODO 14. Assume a single-CPU system. You are given three multi-threaded processes. P1 does a lot of computation, but little I/O. P2 does lots of I/O but little computation. P3 does a reasonable mix of both computation and I/O. What kind of threads would you prefer for each process? Explain why?
+*** TODO P1: Lot of computation/little IO
+    User-level threads would be best for this since there is little IO. With little IO, the system calls for the IO will not block the entire process.
+    Meanwhile, alot of computation focuses on thread execution and performance and user-level threads have better performance than kernel-level ones.
+*** TODO P2: Lot of IO 
+    Kernel-level threads would be best since a lot of IO will not block the entire process if one of the threads is blocked by IO. The other threads
+    can continue to run. Furthermore, since there is not a lot of computation, performance is not as important so kernel-level threads can be used.
+*** TODO P3: Lot of IO and computation
+    Kernel-level threads would still be best due to the high amounts of IO. High amounts of IO would cause user-level threads to block their whole processes.
+
+
+* Concurrency
+** DONE 1. Define Concurrency. How does it differ from parallelism?
+   Concurrency is juggling tasks together within a timeframe. Parallelism is a subset of concurrency and means multiple tasks being executed
+   at the same time.
+   
+** DONE 2. Explain the differences between apparent concurrency and true concurrency.
+   Apparent concurrency is when multiple tasks appear to be executing simultaneously but are actually sharing a CPU and taking turns.
+   True concurrency is when the tasks are being executed simultaneously.
+   
+** DONE 3. Briefly explain with examples
+*** DONE A. Critical Section
+    It is a section of code that modifies or accesses a shared resource amongst threads. This section normally needs to have a lock so that multiple threads
+    are not modifying/accessing at the same time.
+    Example: Code that pushes a new item to a shared stack.
+
+*** DONE B. Race condition
+    This is incorrect behavior when multiple threads are accessing/writing a shared resource at the same time.
+    For example, one thread is removing a node from a linkedlist while another thread is reading it.
+
+*** DONE C. Deadlock
+    Deadlock is when two threads are blocked because they are waiting on locks each other holds.
+    Example: thread_1 gets lock_1, thread_2 gets lock_2, thread_1 blocks trying to get lock_2 while thread_2 blocks trying to get lock_1    
+
+** DONE 4. What’s wrong with associating locks with code rather than shared resources?
+   If the write and access functions do not lock the same lock, then two threads can still run the access and write functions
+   at the same time. Therefore, the whole resource needs to have one lock.
+** DONE 5. Describe the behavior of 
+*** DONE a. UP and DOWN operations on a semaphore,
+**** UP    
+     Increases the int value of semaphore. Furthermore, if any threads were waiting on the semaphore due to a previous value of 0,
+     those threads are woken up and try to execute Down on the semaphore.
+**** Down
+     Decreases the int value of semaphore. If the value of the semaphore is already 0, then the thread blocks until
+     the value is not 0.
+*** DONE b. WAIT and SIGNAL operations on a condition variable.
+**** DONE WAIT
+     These are used for monitors. The WAIT operation releases the condition variable on the monitor and
+     blocks the process until SIGNAL is called on the condition variable.
+**** DONE SIGNAL
+     This is used on the condition variable for a monitor. It wakes up all processes sleeping on the condition
+     variable and then those processes try to acquire the lock (condition variable).
+** DONE 6. Under what situation would you use 
+*** DONE a. Blocking locks, 
+    These locks would be used when critical section needs to be executed and the thread can be blocked until it is able to execute it.
+*** DONE b. Non-blocking locks, and
+    These locks would be used when there can be an alternate execution when a lock cannot be acquired.
+*** DONE c. Spin locks
+    These locks should be used when there is more than one CPU and the critical sections are short in length.
+*** DONE d. Which of these locks can be used in interrupt handlers and how?
+    Interrupt handlers should not be blocked so only non blocking locks should be used. Blocking locks can be used
+    if try_lock is used instead of right away. Spin locks can be used if carefully implemented in multiple CPU machines.
+** DONE 7. When should you NOT use
+*** DONE a) blocking locks, 
+    Blocking locks should not be used in ISRs. They should also not be used if you need to avoid thread idle time.
+
+*** DONE b) non-blocking locks, and 
+    Non blocking locks should not be used when there is not alternate code to be executed. They should also not be used when
+    it is necessary for the thread to acquire the lock.
+
+*** DONE c) spin-locks?
+    They should not be used if there is only one CPU and if the critical sections are very long.
+
+** DONE 8. What is the main difference between a binary semaphore and a counting semaphore?
+   A binary semaphore can only have the values 0 or 1 while a counting semaphore can have any integer values greater than or equal to 0.
+
+** DONE 9. What is priority inversion? How can prevent it?
+   This occurs when a high priority thread is blocked because a low level thread holds a lock the high level thread
+   is asking to acquire. The low level thread is unable to give up the lock because it has low priority. It can be
+   prevented by using Priority inheritance which allows the low priority thread to get a higher priorty so that it may release
+   the lock.
+
+** DONE 10. Explain how a deadlock can occur in the operating system between code executing in the user-context and code executing in interrupt handlers. Also explain how you would prevent such a deadlock.
+   If the code executing in the user-context acquires a lock and then an interrupt is triggered, the ISR may want to acquire the same lock.
+   Since it cannot acquire the lock, the ISR will block. The user-context thread is also blocked because the ISR never returns.
+   
+** DONE 11. Multiple processes are concurrently acquiring and releasing a subset of locks from a set of N locks L1, L2, L3, ….., LN. A process may try to acquire any subset of the N locks. What is the convention that all processes must follow in order to guarantee that there would be no deadlocks? Explain with an example where two processes need to acquire different but intersecting subsets of the N locks above.
+   The processes must acquire the locks in sorted order. Therefore, lets say both processes try to acquire 3 locks {L1, L2, L3}, they must acquire them in the order L1, L2, and L3.
+   
+** DONE 12. How does the Test-and-Set Lock (TSL) instruction work?
+   Two operations occur atomically (therefore, they must acquire together and the process cannot be preempted in between). The two operations are that
+   the value of the lock is copied to a register and then the value of the lock is set to 1.
+
+** DONE 13. Explain how you can implement the UP and DOWN operations on a mutex (binary semaphore) using the TSL instruction.
+*** DONE UP
+    TSL &mutex, register
+    CMP register, %1
+    JZE OK
+    CALL thread_yield
+    JMP UP
+OK  RET
+*** DONE DOWN
+    MV %1, &mutex
+    RET
+** DONE 14. Consider the classical producer-consumer problem. Producers produce items and insert them in a common buffer. Consumers remove items from the common buffer and consume them. In the following skeleton of pseudo-code, demonstrate the use of SEMAPHORES and MUTEXES to complete the pseudo-code for producer and consumer functions. Your code should have no race conditions and no busy loops.
+
+   You can assume that the following functions are available to you. You shouldn’t need anything
+   more than these functions in your pseudo-code. produce_item() produces and returns an item
+   insert_item(item) inserts the item in the common buffer
+   remove_item() removes and returns an item at the head of the buffer
+   consume_item(item) consumes the item supplied 
+   up(&semaphore) and down(&semaphore) have their usual meanings
+
+   ==========================Pseudo-code Skeleton ===============================
+   #define N 100 /* Number of slots in the buffer */
+   typedef int semaphore; /* semaphores are a special kind of counter */
+   semaphore mutex = 1; /* figure out the role of mutex */
+   semaphore empty = N; /* figure out the role of empty sem
+   */
+   semaphore full = 0; /* figure out the role of full sem
+   */
+   void producer(void)
+   {
+     item = produce_item;
+     down(&empty);
+     down(&mutex);
+     insert_item(item);
+     up(&mutex);
+     up(&full);
+   }
+
+   void consumer(void)
+   {
+     down(&full);
+     down(&mutex);
+     item = remove_item();
+     up(&mutex);
+     up(&empty);
+     consume_item(item);
+   }
+   ========================================================================
+
+** DONE 15. Consider the classical producer-consumer problem. Producers produce items and insert them in a common buffer. Consumers remove items from the common buffer and consume them. Complete the following skeleton pseudo-code to explain how you can solve the producerconsumer problem using a monitor and condition variables.
+
+   procedure Producer
+   begin
+     while true
+       item = produce_item;
+       ProducerConsumer.insert(item);
+   end
+
+   procedure Consumer
+   begin
+     while true
+       item = ProducerConsumer.remove();
+       consume_item(item);
+   end
+
+   monitor ProducerConsumer
+   condition empty, full;
+   integer count = 0;
+
+   procedure insert(item)
+   begin
+     if count == N then wait(&full);
+     insert_item(item);
+     count = count + 1;
+     if count == 1 then signal(&empty);
+   end
+
+   procedure item *remove()
+   begin 
+     if count == 0 then wait(&empty);
+     item = remove_item();
+     count = count - 1;
+     if count == N - 1 then signal(&full);
+   end
+   end monitor
+
+** TODO 16. Consider the “events vs threads” argument in the context of monilithic operating system kernels (like Linux or Windows). 
+*** TODO (a) Which model do these operating systems primarily use -- events or threads? Why? 
+    They primarily use threads. They primarily use threads because they are easy to schedule and run on multiple CPUs.
+*** TODO (b) Let’s say you that have to design an operating system that uses the opposite model to what you just answered in (a). What would be the major design changes you would make to the kernel in terms of CPU scheduling, memory management, and I/O processing subsystems?
+** DONE 17. What are the tradeoffs in using semaphores versus monitors with condition variables?
+   Semaphores are used to lock shared resources whereas monitors with condition variables are used to lock functions. Furthermore, semaphores naturally take care of counts since they are
+   of integer value whereas condition variables are not and therefore are better suited for a singular count. Furthermore, condition variables are used more to
+   signal other threads/processes that they can start running whereas semaphores focus on locking shared resources.
+** DONE 18. You are given a function f() in the Linux kernel that constitutes a critical section, i.e. no two parts of the kernel should execute f() concurrently. Assume that when the function f() is
+   invoked anywhere in kernel, you call it using the following convention.
+   Do some form of locking;
+
+    Invoke function f()
+
+    Do some form of unlocking.
+
+   Explain what type of locking/unlocking mechanism would you choose under each of the
+   following situations and justify your answer:
+*** DONE a. Function f() executes for a very short time. It can be called concurrently from two or more threads within the kernel (meaning either processes or conventional threads
+    currently in the kernel context, such as within a system call), but NEVER from the
+    within an interrupt context. (Interrupt context refers to the code that is executed
+    immediately as a result of a hardware interrupt to the kernel, i.e. interrupt service routine,
+    and also to the code that executes immediately following an ISR, but just before
+    resuming the interrupted thread.)
+    
+    A spinlock would be best because the execution is very short as long as there is more than one CPU. Since the execution is very short, a very small CPU time would be wasted which
+    might be better than the time needed for a context switch.
+*** DONE b. Function f() can execute for a very long time. Otherwise, just as in the previous case, it
+    can be called concurrently from two or more threads within kernel, but never from the
+    within an interrupt context.
+    A blocking lock is probably best used in this case. Since the execution is long, if a thread needs to wait for lock to be available, it will be better to block
+    so that another process/thread can start to run.
+*** DONE c. Function f() executes for a very short time. It can be called concurrently from two or
+    more threads within kernel, and ALSO from the within an interrupt context.
+
+    It would be best to use a non blocking lock if there is only on CPU. This is because locking on ISRs can cause deadlock. If there are multiple CPUs
+    spinlocks can be used carefully to avoid deadlock.
+
+     Justify your answers, keeping in mind that the system can have either just a singleprocessor
+    or multiple processors. Try to give the best possible locking mechanism, not just
+    something that works. If possible, you can support your answer with real examples from within
+    Linux source code where each of the above types of locking/unlocking approaches are used.
+
+** TODO 19. Explain how you can implement the WAIT and SIGNAL operations on condition variable using the TSL instruction.
+*** WAIT 
+    MV %1, &condition //Give up lock
+SL  SLEEP_UNTIL_SIGNAL
+    TSL &condition, register
+    CMP register, %1
+    JNE SL
+    RET
+*** SIGNAL
+    MV %1, &condition //Gives up lock
+    SIGNAL_SLEEPING_THREADS
+    RET
+
+
+* System Calls 
+** DONE 1. What is a system call? How do system calls differ from ordinary function calls?
+   A system calls invokes kernel level code. This is executed with an interrupt. An ordinary function call does not go into kernel code and use an interrupt.
+
+** DONE 2. What steps take place when a system call is invoked by a process?
+   The process is interrupted by a TRAP and goes to the kernel level code. The processor switches to a higher privilege level and checks what system call
+   is being invoked by checking the stack and processor state. The kernel level code is then executed. After the code is done executing,
+   the the interrupt is over and the original process state is restored. The processor switches back to a lower level privilege. The process continues execution.
+
+** DONE 3. What is a system call table? Why is it needed? OR What role does it play in OS security?
+   A system call table contains the system calls available through the kernel. Syscalls are found by doing an index
+   look up in the table. By defining these system calls, the table would have to be changed to include other kernel level
+   code that could be nefarious.
+
+** DONE 4. Explain the CPU-privilege transitions during a system call.
+   Intially, the privilege level is low. Then it becomes high when it begins to execute the syscall and then
+   returns back to low once the syscall is finished executing.
+
+** DONE 5. 
+*** DONE a) Why do some operating systems, such as Linux, map themselves (i.e. the kernel code and data) into the address space of each process? 
+    This way, a complete context switch is not needed when a process makes a system call. When calling on the syscall, the necessary information is
+    already available.
+*** DONE b) What is the alternative?
+    The alternative would be to not include it in the address space which would require many more context switches.
+** DONE 6. Assume a mainstream monolithic OS, such as Linux. When a process makes a system call, how can the system call mechanism avoid any context switching overhead between the calling process and the OS? (as opposed to the overhead seen when switching between two processes).
+   The OS level code can be mapped to the processes address space so that a full context switch is not needed.
+
+** DONE 7. In terms of call-return behavior, how is a system call different from a normal function call?
+   The processor privilege level changes during a system call. Furthermore, depending on the implementation, there can be a context switch when calling a system call.
+   In addition, a system call simply returns the status of the execution of the system call. A system call also requires an interrupt (TRAP) to change the state to call
+   kernel level code.
+   
+** TODO 8. Rootkits (malicious code in the kernel) can intercept system calls made by processes (all processes or a specific process) and replace the original system call behavior with some other behavior.. How would you go about implementing such behavior? Describe the design but don’t write any code.
+   This can be done by changing the syscall table numbers. For example, given an index number of 10 for the syscall open(), 10 can be mapped to the rootkit syscall code which will eventually
+   call open() inside its code to let the user think the open() code was ran successfully.
+
+   
+* File Systems
+** DONE 1. What is a File system
+   A file system is the component of the OS which organized raw data on the disk.
+** DONE 2. In a file-system, 
+*** DONE a) What is meta-data? 
+    It is the data that describes other data. Without it, data would be useless.
+*** DONE b) Where is meta-data stored? 
+    In linux, meta-data is stored in inodes.
+*** DONE c) Why is it important for a file system to maintain the meta-data information? 
+    Without the meta-data information, the data is useless since the bytes cannot be interperted.
+*** DONE d) List some of the typical information that is part of the meta-data.
+    File type, permissions, owner, if it is binary, creation time, current size, max size, etc.
+** DONE 3. If you collect a trace of I/O operations below the file system cache (at device driver or physical disk level), what type of I/O operations do you expect to see more of -- write I/O requests or read I/O requests? Explain why.
+   Will mainly see write operations because majority of read operations are handled by the cache. Even if the cache initially handles writes, they eventually have to be pushed to the disk.
+** TODO 4. 
+*** TODO (a) Suppose you collect a trace of I/O operations above the file system layer (in applications or in system calls). Do you expect to see more write I/O operations or read I/O operations?
+    There will be an even amount of write and read operations based on what the applications are doing.
+*** DONE (b) Now suppose you collect a similar trace of I/O operations below the block device layer (in the disk or device driver). Do you expect to see more write I/O operations or read I/O operations? Explain why?
+    There will be more write operations because almost all read operations will be handled by the file system cache. 
+** DONE 5. If you increase or decrease the disk block size in a file system, how (and why) will it affect
+*** DONE (a) the size of the inode, and 
+    You can possibly decrease the size of the inode with greater disk block sizes because you will need less indirect and levels of indirect blocks to access the file.
+    Decreasing the size of the block will increase the size of the inode because more indirect and direct blocks will be needed to access the file.
+*** DONE (b) the maximum size of a file accessible only through direct block addresses?
+    If the number of direct block addresses remains the same, then the max size accessible through direct block addresses increases.
+    This is because the max size accessisible = # direct blocks * size of direct blocks.
+** DONE 6. How does the inode structure in UNIX-based file-systems (such as Unix V7) support fast access to small files and at the same time support large file sizes.
+   Smaller files can be accessed by direct blocks. These direct blocks allow direct access from the inode to the file very quickly.
+   Different levels of indirect blocks are used to store larger files. Therefore, fast access is possible to small files whereas also having support for large files.
+** DONE 7. What does the file system cache do and how does it work? Explain with focus on the data structures used by the file system cache.
+   The file system cache allows for faster access to most frequently used data blocks. A hash table is used to do a quick lookup on data blocks. The hash table maps to nodes in a double linked
+   list which is used to implement a least-recently-used algorithm. Nodes are purged from the list periodically based on the least-recently-used algorithm.
+** DONE 8. Explain the role of file system cache during 
+*** DONE (a) read I/O operations and 
+    Read operations are done much quicker using a file system cache. The cache will handle read requests without ever letting the request reach the disk/device driver.    
+*** DONE (b) write I/O operations.    
+    Write operations are cached by the file system cache and then pushed to the disk/device driver when the entry is purged from the cache.
+** DONE 9. Describe two different data structures using which file system can track free space on the storage device. Explain relative advantages/disadvantages of each.
+*** DONE Linked List
+    Store the free disk blocks in a linked list.
+**** Advantage
+     Can easily get free disk space by removing from the tail or head of the linkedlist.
+**** Disadvantage
+     Uses up more space due to each node representing on block. Harder to get contigious blocks of free space because searching for connecting block might require traversal of whole list.
+*** DONE Bitmap
+    Store the free space blocks based on a bit map. Use the index of the blocks in the bitmap with 0 representing free and 1 representing in use.
+**** Advantage
+     Less space needed to store bitmap than linkedlist and quicker lookup for contigious free blocks.
+**** Disadvantage
+     More time needed to find an inital free disk block.
+** DONE 10. How does a log-structured file system work? Why is its performance (typically) better than conventional file systems?   
+   It uses the disk as a log and all write operations are written to the end of the disk. This optimizes write operations since sequential writes do not require random seek operations.
+   Although reads are not optimized as random seeks are required and the latest updated disk blocks need to be stored, reads are rarely done on the disk since the cache takes care of them.
+** DONE 11. In a file-system, explain how two different directories can contain a common (shared) file. In other words, how do hard links work?
+   Hard link points to the same file. Therefore, if there is a file in a directory and then a hard link is created to the file from the another directory, both will share that file.
+   None of the meta-data of the file changes. However, there is a counter so that if it is removed from one directory, the file is not deleted and the counter is just decremented. In this case,
+   one directory will contain the file but the other will not. When is it is removed from the last directory, it will be deleted.
+** DONE 12. How does the inode structure in UNIX-based file-systems (such as Unix V7) support fast access to small files and at the same time support large file sizes.   
+** DONE 13. Explain the structure of a UNIX i-node. Why is it better than having just a single array that maps logical block addresses in a file to physical block addresses on disk?
+   The inode contains the meta-data for the file it represents. Then it uses direct blocks and different levels of indirect blocks to access the actual disk blocks. Direct blocks allow
+   quick access to smaller files while the increasing levels of indirect blocks allow for inodes to hold bigger files.
+** DONE 14. Explain the steps involved in converting a path-name /usr/bin/ls to its i-node number for the file ls.
+   First, the file "usr" is looked up in the root directory. The inode for /usr is found and then the disk block for the directory is found in the inode.
+   In the disk block for /usr, the inode /usr/bin is found and then that is used to find the disk block for /usr/bin. The inode for /usr/bin/ls is found in the disk block
+   which is then used to get the disk blocks for ls.
+** TODO 15. What’s wrong with storing file metadata as content within each directory “file”? In other words, why do we need a separate i-node to store metadata for each file?
+   Files are not necessarily only associated with one directory. They can be associated with multiple directories through hard links but that will not change the meta-data.
+   Therefore separate i-nodes need to be saved separate from the directory. Furthermore, this would require the directory files to get larger.
+** TODO 16. Assume that the
+   • Size of each disk block is B.
+   • Address of each disk block is A bytes long.
+   • The top level of a UNIX i-node contains D direct block addresses, one single-indirect block 
+   address, one double-indirect block address, and one triple-indirect block address.
+*** DONE (a) What is the size of the largest “small” file that can be addressed through direct block addresses?
+    D*B
+*** TODO (b) What is the size of the largest file that can be supported by a UNIX inode? Explain your answers.
+    D*B (direct blocks) + (B/A)*B (single indirect block) + (B/A)*(B/A)*B (double indirect block) + (B/A)*(B/A)*(B/A)*B (triple indirect block)   
+** TODO 17. In a UNIX-like i-node, suppose you need to store a file of size 32 Terabytes (32 * 2^40 bytes).
+   Approximately how large is the i-node (in bytes)? Assume 8096 bytes (8KB) block size, 8
+   bytes for each block pointer (entry in the inode)., and that i-node can have more than three
+   levels of indirection. For simplicity, you can ignore any space occupied by file attributes
+   (owner, permissions etc) and also focus on the dominant contributors to the i-node size.
+   
+   8TB
+** TODO 18. In a UNIX-based filesystems, approximately how big (in bytes) will be an inode for a 200
+   Terabyte (200 * 240 bytes) file? Assume 4096 bytes block size and 8 bytes for each entry in
+   the inode that references one data block. For simplicity, you can ignore intermediate levels of
+   indirections in the inode data structure and any space occupied by other file attributes
+   (permissions etc).
+
+** TODO 19. In a UNIX-based filesystems, approximately how big (in bytes) will be an inode for a 400
+   Terabyte (400 * 240 bytes) file? Assume 4096 bytes (4KB) block size and 8 bytes for each
+   entry in the inode that references one data block. For simplicity, you can ignore intermediate
+   levels of indirections in the inode data structure and any space occupied by other file
+   attributes (owner, permissions etc).
+
+** TODO 20. Assume that the size of each disk block is 4KB. Address of each block is 4 bytes long. What
+   is the size of the largest file that can be supported by a UNIX inode? What is the size of the
+   largest “small” file that can be addressed through direct block addresses? Explain how you
+   derived your answer.
+*** DONE Largest "small" file
+    If there are 12 direct blocks, then 12 * 4KB = 48KB.
+*** TODO Largest file
+    12*4KB + 2^10*4KB + 2^10*2^10*4KB + 2^10*2^10*2^10*4KB = Around 4TB
+** TODO 21. Assume all disk blocks are of size 8KB. Top level of a UNIX inode is also stored in a disk
+   block of size 8KB. All file attributes, except data block locations, take up 256 bytes of the
+   top-level of inode. Each direct block address takes up 8 bytes of space and gives the address
+   of a disk block of size 8KB. Last three entries of the first level of the inode point to single,
+   double, and triple indirect blocks respectively. Calculate (a) the largest size of a file that can
+   be accessed through the direct block entries of the inode. (b) The largest size of a file that
+   can be accessed using the entire inode.
+
+** TODO 22. In the “UNIX/Ritchie” paper, consider three major system components: files, I/O devices,
+   and memory. UNIX treats I/O devices as special files in its file system. What other mappings
+   are possible among the above three components? (In other words, which component can be
+   treated as another component)? What would be the use for each possible new mapping?
+
+** TODO 23. Suppose your filesystem needs to store lots of uncompressed files that are very large
+   (multiple terabytes) in size. (a) Describe any alternative design to the traditional UNIX inode
+   structure to reduce the size of inodes wherever possible (NOT reduce the file content, but
+   reduce inode size)? (Hint: maybe you can exploit the nature of data stored in the file, but
+   there may be other ways too). (b) What could be the advantage of your approach compared to
+   just compressing the contents of each file?
+
+** DONE 24. Why doesn’t the UNIX file-system allow hard links 
+*** DONE (a) to directories, and 
+    A hard link to a directory can cause a loop which would cause the structure to no longer remain a tree.
+*** DONE (b) across mounted file systems?
+    A hard link to a file on another file system would not be possible because the current file system would have
+    no information on the data from the other system.
+** TODO 25. Why did the authors of the “UNIX” paper consider the UNIX file-system to be their most important innovation?
+   
+** TODO 26. Assume that the
+   • Size of each disk block is B.
+   • Address of each disk block is A bytes long.
+   • The top level of a UNIX i-node contains D direct block addresses, one single-indirect block
+   address, one double-indirect block address, and one triple-indirect block address.
+
+   How big (in bytes) will be an inode for a file that is F bytes long? Calculate your answer for
+   each case when the file spans (a) direct, (b) single-, (b) double-, and (c) triple-indirect blocks.
+ 
+
+* Security
+
+** DONE 1. What is the difference between security and privacy? Are they entirely the same? Or entirely different?
+   Security is CIA -> Data confidentiality, Data integrity, System availability. Just has to do with the confidentiality part where data cannot be accessed by others.
+
+** DONE 2. Explain the three key principles of computer security?
+   CIA -> Data confidentiality, data integrity, system accessibility. Making sure others do not have access, making sure the data remains unaltered, and making sure you have access.   
+** TODO 3. What is a threat model? What factors should you consider when defining threat model?
+   
+** DONE 4. What hardware mechanism does x86 ISA provide to ensure that Operating System’s code and data are protected from user-level processes?
+   The CPU has privilege flags set that are checked when accessing the OS's code and data. If the flags are not at the OS level, it cannot access the code and data.
+   
+** DONE 5. What is the role of privilege levels (defined by the ISA) in a computer system? How  many privilege levels are defined in the x86 ISA? In which privilege level does the OS execute?
+   They allow for a security check when trying to access OS code and data. There are 4 levels from 0-3 but only 0 and 3 are used. 0 is for OS and 3 is for the user level.
+   
+** DONE 6. Explain the basic security mechanisms supported by (a) the CPU execution hardware, (b) Memory management hardware and software, (c) File system. Assume that the machine uses x86 ISA.   
+** DONE 7. What is authentication?
+   Authentication is a method to check that the intended user is accessing the system.
+** DONE 8. Describe different techniques to authenticate users.
+   Something user knows -> passwords.
+   Something user has -> authentication card.
+   Something user is -> biometrics such as fingerprints.
+** DONE 9. What are some ways in which by which authentication mechanisms can be subverted?
+   Login spoofing can be used to get passwords. Authentication cards can be stolen. Fingerprints can be taken off of other objects.
+
+** DONE 10. What’s a computer virus? What’s a computer worm?
+*** DONE Virus
+    A program that reproduces itself by attaching itself to other programs. Needs a human to be passed to another machine.
+*** DONE Worm
+    Spreads across machines as well but does not need human to be passed to another machine. Does not need a host file. 
+** DONE 11. Explain a buffer overflow attack.
+   A buffer overflow attack abuses poorly written code. It performs an attack on the stack and normally is done when there is not proper bound checking when reading in data.
+   It changes the ret address normally from a function call to the malicious code.
+** DONE 12. What is sandboxing? List two sandboxing mechanisms.
+   Sandboxing is a way to isolate programs so as to do a security check without compromising the entire system. One method is to run the program in VM and another is to run it in a jailed environment.
+
+** DONE 13. Explain Discretionary, Mandatory, and Role-based access control mechanisms.
+*** DONE Discretionary
+    Certain users can access and perform certain actions.
+*** DONE Mandatory
+    Same thing as multi-level security. This is built into the systems. Data has levels of privilege associated with it and sometimes with different
+    departments. Such as classified, top secret, etc. Different users have access to different levels of privilege (clearances).
+*** DONE Role-based
+    Those with a certain title can access and perform certain actions. For example, CEO can do this, Software Engineer can do that.
+*** DONE Admin Role-based
+    Those with a higher title, can allow those below to access data and perform certain actions.
+** DONE 14. Explain 
+*** DONE (a) trusted computing base (TCB) including why is it called “Trusted”,    
+    This is part of the software system that is trusted by the user. This base, is assumed to be working properly and is secure.
+    If this is compromised, the entire system is compromised. It is not automatically secure. It is trusted because it is assumed to be secure.
+*** DONE (b) Reference Monitor, and 
+    This is also called the security kernel and enforces access control.
+*** DONE (c) relationship between TCB and reference monitor.
+    The security kernel is a part of the TCB and keeping both small is essential in making them both secure.
+** DONE 15. Explain the two key data access principles of multi-level security (MLS) systems (also called Mandatory Access Control).
+   Each data has its own clearance level and sometimes, sub clearance level. Those with the required clearance level or higher, can access the data.
+** DONE 16. Why is Mandatory access control called “mandatory”? What’s the alternative?
+   It is mandatory because only those with certain clearance levels can access data. There is no way to change this.
+   The alternate is "Discretionary" access control where individual users are assignemd permissions. This is more flexible as the permissions
+   for the individual user can change.
+** DONE 17. What type of systems require mandatory access control?
+   Military systems and spy systems require this. Also defense systems.
+** DONE 18. Give an example of a scenario where the software doesn’t trust the OS, hypervisor, and/or the hardware platform on which it runs? What can the software possibly do to “secure” itself in this situation?
+   This is the case when servers are rented out remotely. An example is having a remote server through AWS. AWS owns the hardware and the overall OS which is used to
+   implement the virtualization of multiple OS's. The software uses a principle of "No READ UP and No WRITE DOWN". This means that the higher level software/hardware
+   cannot write to the user level memory and alter it.
+** DONE 19. Considering memory protection, explain how the operating system ensures that user-level processes don’t access kernel-level memoqry?
+   User-level processes cannot access kernel-level memory through EFLGAGS which are set for the CPU. When the user-level process is running, the flags equal 3 which indicates
+   it is running in user-level mode. These flags are checked and the OS ensures that user-level process does not access kernel-level memory.
+
+
+* Virtualization
+** 1. For system virtual machines, explain how virtual memory addresses are translated to physical
+   addresses when (a) hardware supports EPT/NPT (extended/nested page tables) and (b) hardware
+   only supports traditional (non-nested) page tables.
+
+** 2. How does Intel VTx extending the traditional CPU execution privilege levels to support system virtual
+   machines?
+
+** 3. Compare different approaches for virtualizing I/O devices for virtual machines.
+
+** 4. Explain briefly with examples (1) Process virtual machine, (2) System virtual machine, (3) Emulator,
+   (4) Binary optimizer, (5) High-level Language Virtual Machine.
+
+
+** 5. Which interface does a Process VM virtualize? Which interface does a System VM virtualize?
+
+** 6. (a) How do Interpreters differ from Dynamic Binary Translators? (b) How do Binary Optimizers differ
+   from Emulators?
+
+** 7. What are the advantages and disadvantages of Classical System VMs compared to Para-virtualized
+   VMs?
+
+** 8. Give at least three mechanism(s) by which the highest privileged software, such as an operating
+   system or a hypervisor, retains control over the CPU?
+
+** 9. What is a co-designed virtual machine? Briefly describe and give an example.
+
+** 10. What type of virtual machine (VM) is each of the following and why? Be as specific as possible. (a)
+   Java Virtual Machine (JVM) (b) VMWare (c) Xen (d) Digital FX!32 (e) VirtualPC (f) (e) Transmeta
+   Crusoe (Code Morphing)
+
+** 11. Explain the difference between the concepts of full-virtualization and para-virtualization, giving at least
+   one example of both virtualization techniques.
+
+** 12. When you have design a system that does emulation, under what circumstances would you opt for
+   Interpretation and when would you opt for Binary Translation? Justify your answer.
+** 13. Let’s say that you are asked to modify the Linux OS so that programs and libraries compiled on
+   Windows OS could run natively on Linux, meaning they should be executed as normal programs
+   (without using any emulator or virtual machine). What would be your high-level approach?
+ 
+
+
+* Questions
+
+** Should the TSL check if the previous value of the mutex was 0 or 1? I thought a previous value of 1 meant unlocked but in the slides, we are checking if the mutex was set to 0.

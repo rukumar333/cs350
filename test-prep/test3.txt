@@ -1,0 +1,442 @@
+Overview (1) When measuring I/O throughput, what is the difference between the units
+(1) MBps and Mbps?
+(2) KBps and Kbps?
+
+(2) Replace “?” below with the correct answer
+A. 1 Nanosecond = ? seconds
+B. 500 Milliseconds = ? seconds
+C. 4 KB = ? bytes
+D. 4 Kilometers = ? meters
+E. 4Kbps = ? bits per second
+
+(3) What is an Operating System? List its primary responsibilities.
+
+(4) What is a system call? How is a system call different from ordinary function calls?
+
+(5) Explain the following interfaces in a computer system
+(a) Instruction Set Architecture (ISA)
+(b) User Instruction Set Architecture (User ISA),
+(c) System ISA,
+(d) Application Binary Interface (ABI).
+(e) Application Programmers’ Interface (API)
+
+(6) Why doesn’t a program (executable binary) that is compiled on the linux machine execute
+on a Windows machine, even if the underlying CPU hardware is the same (say x86)?
+
+(7) What are the different ways in which the OS code can be invoked?
+
+
+ 
+Threads
+1. What are threads? How do they differ from processes? How are they similar?
+   Threads share the same address space but have their own program counters, stack, stack pointer, and registers.
+Like processes, they each follow their own execution.
+
+2. What state do threads share? What state is different?
+   They share opened file descriptors, signals, and signal handlers.
+They do not share Thread IDs, priorities, and errno.
+
+3. Why does context-switching between threads incur less overhead than between processes?
+   The full address space does not need to be switched over since the address space is being shared among the different
+threads.
+
+4. Briefly explain
+(a) User-level threads
+    These threads are not visible to the kernel and are only there at the individual process level.
+Therefore, they cannot be individually be scheduled by the kernel. They are executed when the
+whole process is in the CPU.
+
+(b) Kernel-level threads
+    These threads are visible to the kernel and can be scheduled individually by the kernel.
+
+(c) Local thread scheduling
+    When a process gets timeslice, it is divided up amongst the threads of that process. Only requires local knowledge
+of threads within the process. 
+
+(d) Global thread scheduling
+    In this case, the threads each receive a timeslice independent on their processes. Can only be implemented with
+kernel level threads. 
+
+5. What are the benefits and disadvantages of using user-level and kernel-level threads?
+   User-level: Advantage-> Kernel does not need global knowledge of all threads. Only local knowledge of threads of
+   current process is used.
+   	       Disadvantage-> Threads cannot be scheduled at thread level.
+6. What combinations or user/kernel threads and global/local scheduling are feasible and why?
+
+7. What kind of applications benefit the most from kernel-level threads support? What kind of
+applications benefit most from user-level threads support? Explain why with examples?
+
+8. Explain how a web server could use threads to improve concurrency when serving client
+requests.
+9. What happens if a thread in a multi-threaded process crashes? How can you improve the
+robustness (fault-tolerance) of a multi-threaded application?
+
+10. Event-driven programming
+(a) What is the “event-driven” programming model?
+(b) What does the structure of a typical event-driven program look like?
+(c) When would you prefer an event-driven programming model over a thread-based
+programming model?
+
+11. What is the problem with long-running event handlers? How do threads solve this problem?
+
+12. What type of applications would be more suitable for thread-based programming compared
+to event-driven programming?
+
+13. What are callbacks and what problems can they cause when used with threads?
+
+14. Assume a single-CPU system. You are given three multi-threaded processes. P1 does a lot of
+computation, but little I/O. P2 does lots of I/O but little computation. P3 does a reasonable
+mix of both computation and I/O. What kind of threads would you prefer for each process?
+Explain why?
+ 
+Concurrency
+1. Define Concurrency. How does it differ from parallelism?
+
+2. Explain the differences between apparent concurrency and true concurrency.
+
+3. Briefly explain with examples
+A. Critical Section
+B. Race condition
+C. Deadlock
+
+4. What’s wrong with associating locks with code rather than shared resources?
+5. Describe the behavior of (a) UP and DOWN operations on a semaphore, (b) WAIT and
+SIGNAL operations on a condition variable.
+
+6. Under what situation would you use (a) Blocking locks, (b) Non-blocking locks, and (c) Spin
+locks. Which of these locks can be used in interrupt handlers and how?
+7. When should you NOT use (a) blocking locks, (b) non-blocking locks, and (c) spin-locks?
+8. What is the main difference between a binary semaphore and a counting semaphore?
+9. What is priority inversion? How can prevent it?
+10. Explain how a deadlock can occur in the operating system between code executing in the
+user-context and code executing in interrupt handlers. Also explain how you would prevent
+such a deadlock.
+11. Multiple processes are concurrently acquiring and releasing a subset of locks from a set of N
+locks L1, L2, L3, ….., LN. A process may try to acquire any subset of the N locks. What is
+the convention that all processes must follow in order to guarantee that there would be no
+deadlocks? Explain with an example where two processes need to acquire different but
+intersecting subsets of the N locks above.
+
+12. How does the Test-and-Set Lock (TSL) instruction work?
+
+13. Explain how you can implement the UP and DOWN operations on a mutex (binary
+semaphore) using the TSL instruction.
+
+14. Consider the classical producer-consumer problem. Producers produce items and insert them
+in a common buffer. Consumers remove items from the common buffer and consume them.
+In the following skeleton of pseudo-code, demonstrate the use of SEMAPHORES and
+MUTEXES to complete the pseudo-code for producer and consumer functions. Your code
+should have no race conditions and no busy loops.
+
+You can assume that the following functions are available to you. You shouldn’t need anything
+more than these functions in your pseudo-code. produce_item() produces and returns an item
+insert_item(item) inserts the item in the common buffer
+remove_item() removes and returns an item at the head of the buffer
+consume_item(item) consumes the item supplied 
+up(&semaphore) and down(&semaphore) have their usual meanings
+
+==========================Pseudo-code Skeleton ===============================
+#define N 100 /* Number of slots in the buffer */
+typedef int semaphore; /* semaphores are a special kind of counter */
+semaphore mutex = (initialize this); /* figure out the role of mutex */
+semaphore empty = (initialize this); /* figure out the role of empty sem
+*/
+semaphore full = (initialize this); /* figure out the role of full sem
+*/
+
+void producer(void)
+{
+ /* complete this function */
+}
+
+void consumer(void)
+{
+ /* complete this function too */
+}
+========================================================================
+
+15. Consider the classical producer-consumer problem. Producers produce items and insert them
+in a common buffer. Consumers remove items from the common buffer and consume them.
+Complete the following skeleton pseudo-code to explain how you can solve the producerconsumer
+problem using a monitor and condition variables.
+
+procedure Producer
+begin
+/* complete this procedure */
+end
+
+procedure Consumer
+begin
+/* complete this procedure */
+end
+
+monitor ProducerConsumer
+condition /* declare the condition variables you need */
+integer /* declare any other variables you need */
+
+procedure insert(item)
+begin
+/* complete this procedure */
+end
+
+procedure item *remove()
+begin 
+/* complete this procedure */
+end
+end monitor
+
+16. Consider the “events vs threads” argument in the context of monilithic operating system
+kernels (like Linux or Windows). (a) Which model do these operating systems primarily use
+-- events or threads? Why? (b) Let’s say you that have to design an operating system that
+uses the opposite model to what you just answered in (a). What would be the major design
+changes you would make to the kernel in terms of CPU scheduling, memory management,
+and I/O processing subsystems?
+
+17. What are the tradeoffs in using semaphores versus monitors with condition variables?
+
+18. You are given a function f() in the Linux kernel that constitutes a critical section, i.e. no two
+parts of the kernel should execute f() concurrently. Assume that when the function f() is
+invoked anywhere in kernel, you call it using the following convention.
+ Do some form of locking;
+
+ Invoke function f()
+
+ Do some form of unlocking.
+
+Explain what type of locking/unlocking mechanism would you choose under each of the
+following situations and justify your answer:
+a. Function f() executes for a very short time. It can be called concurrently from two or
+more threads within the kernel (meaning either processes or conventional threads
+currently in the kernel context, such as within a system call), but NEVER from the
+within an interrupt context. (Interrupt context refers to the code that is executed
+immediately as a result of a hardware interrupt to the kernel, i.e. interrupt service routine,
+and also to the code that executes immediately following an ISR, but just before
+resuming the interrupted thread.)
+b. Function f() can execute for a very long time. Otherwise, just as in the previous case, it
+can be called concurrently from two or more threads within kernel, but never from the
+within an interrupt context.
+c. Function f() executes for a very short time. It can be called concurrently from two or
+more threads within kernel, and ALSO from the within an interrupt context.
+
+ Justify your answers, keeping in mind that the system can have either just a singleprocessor
+or multiple processors. Try to give the best possible locking mechanism, not just
+something that works. If possible, you can support your answer with real examples from within
+Linux source code where each of the above types of locking/unlocking approaches are used.
+
+
+19. Explain how you can implement the WAIT and SIGNAL operations on condition variable
+using the TSL instruction.
+ 
+
+
+System Calls 1. What is a system call? How do system calls differ from ordinary function calls?
+
+1. What steps take place when a system call is invoked by a process?
+
+2. What is a system call table? Why is it needed? OR What role does it play in OS security?
+
+3. Explain the CPU-privilege transitions during a system call.
+
+4. (a) Why do some operating systems, such as Linux, map themselves (i.e. the kernel
+code and data) into the address space of each process? (b) What is the alternative?
+
+5. Assume a mainstream monolithic OS, such as Linux. When a process makes a system call,
+how can the system call mechanism avoid any context switching overhead between the
+calling process and the OS? (as opposed to the overhead seen when switching between
+two processes).
+
+6. In terms of call-return behavior, how is a system call different from a normal function call?
+
+7. Rootkits (malicious code in the kernel) can intercept system calls made by processes (all
+processes or a specific process) and replace the original system call behavior with some other
+behavior.. How would you go about implementing such behavior? Describe the design but
+don’t write any code.
+ 
+File Systems
+1. What is a File system
+
+2. In a file-system, (a) What is meta-data? (b) Where is meta-data stored? (c) Why is it
+important for a file system to maintain the meta-data information? (d) List some of the
+typical information that is part of the meta-data.
+3. If you collect a trace of I/O operations below the file system cache (at device driver or
+physical disk level), what type of I/O operations do you expect to see more of -- write I/O
+requests or read I/O requests? Explain why.
+
+4. (a) Suppose you collect a trace of I/O operations above the file system layer (in applications
+or in system calls). Do you expect to see more write I/O operations or read I/O operations?
+(b) Now suppose you collect a similar trace of I/O operations below the block device layer
+(in the disk or device driver). Do you expect to see more write I/O operations or read I/O
+operations? Explain why?
+
+5. If you increase or decrease the disk block size in a file system, how (and why) will it affect
+(a) the size of the inode, and (b) the maximum size of a file accessible only through direct
+block addresses?
+6. How does the inode structure in UNIX-based file-systems (such as Unix V7) support fast
+access to small files and at the same time support large file sizes.
+7. What does the file system cache do and how does it work? Explain with focus on the data
+structures used by the file system cache.
+8. Explain the role of file system cache during (a) read I/O operations and (b) write I/O
+operations.
+
+9. Describe two different data structures using which file system can track free space on the
+storage device. Explain relative advantages/disadvantages of each.
+
+10. How does a log-structured file system work? Why is its performance (typically) better than
+conventional file systems?
+11. In a file-system, explain how two different directories can contain a common (shared) file. In
+other words, how do hard links work?
+12. How does the inode structure in UNIX-based file-systems (such as Unix V7) support fast
+access to small files and at the same time support large file sizes.
+13. Explain the structure of a UNIX i-node. Why is it better than having just a single array that
+maps logical block addresses in a file to physical block addresses on disk?
+14. Explain the steps involved in converting a path-name /usr/bin/ls to its i-node number for the
+file ls.
+15. What’s wrong with storing file metadata as content within each directory “file”? In other
+words, why do we need a separate i-node to store metadata for each file?
+
+16. Assume that the
+• Size of each disk block is B.
+• Address of each disk block is A bytes long.
+• The top level of a UNIX i-node contains D direct block addresses, one single-indirect block 
+address, one double-indirect block address, and one triple-indirect block address.
+(a) What is the size of the largest “small” file that can be addressed through direct block
+addresses?
+(b) What is the size of the largest file that can be supported by a UNIX inode?
+Explain your answers.
+
+17. In a UNIX-like i-node, suppose you need to store a file of size 32 Terabytes (32 * 240 bytes).
+Approximately how large is the i-node (in bytes)? Assume 8096 bytes (8KB) block size, 8
+bytes for each block pointer (entry in the inode)., and that i-node can have more than three
+levels of indirection. For simplicity, you can ignore any space occupied by file attributes
+(owner, permissions etc) and also focus on the dominant contributors to the i-node size.
+
+18. In a UNIX-based filesystems, approximately how big (in bytes) will be an inode for a 200
+Terabyte (200 * 240 bytes) file? Assume 4096 bytes block size and 8 bytes for each entry in
+the inode that references one data block. For simplicity, you can ignore intermediate levels of
+indirections in the inode data structure and any space occupied by other file attributes
+(permissions etc).
+19. In a UNIX-based filesystems, approximately how big (in bytes) will be an inode for a 400
+Terabyte (400 * 240 bytes) file? Assume 4096 bytes (4KB) block size and 8 bytes for each
+entry in the inode that references one data block. For simplicity, you can ignore intermediate
+levels of indirections in the inode data structure and any space occupied by other file
+attributes (owner, permissions etc).
+20. Assume that the size of each disk block is 4KB. Address of each block is 4 bytes long. What
+is the size of the largest file that can be supported by a UNIX inode? What is the size of the
+largest “small” file that can be addressed through direct block addresses? Explain how you
+derived your answer.
+21. Assume all disk blocks are of size 8KB. Top level of a UNIX inode is also stored in a disk
+block of size 8KB. All file attributes, except data block locations, take up 256 bytes of the
+top-level of inode. Each direct block address takes up 8 bytes of space and gives the address
+of a disk block of size 8KB. Last three entries of the first level of the inode point to single,
+double, and triple indirect blocks respectively. Calculate (a) the largest size of a file that can
+be accessed through the direct block entries of the inode. (b) The largest size of a file that
+can be accessed using the entire inode.
+
+22. In the “UNIX/Ritchie” paper, consider three major system components: files, I/O devices,
+and memory. UNIX treats I/O devices as special files in its file system. What other mappings
+are possible among the above three components? (In other words, which component can be
+treated as another component)? What would be the use for each possible new mapping?
+23. Suppose your filesystem needs to store lots of uncompressed files that are very large
+(multiple terabytes) in size. (a) Describe any alternative design to the traditional UNIX inode
+structure to reduce the size of inodes wherever possible (NOT reduce the file content, but
+reduce inode size)? (Hint: maybe you can exploit the nature of data stored in the file, but
+there may be other ways too). (b) What could be the advantage of your approach compared to
+just compressing the contents of each file?
+24. Why doesn’t the UNIX file-system allow hard links (a) to directories, and (b) across mounted
+file systems? 
+
+25. Why did the authors of the “UNIX” paper consider the UNIX file-system to be their most
+important innovation?
+
+26. Assume that the
+• Size of each disk block is B.
+• Address of each disk block is A bytes long.
+• The top level of a UNIX i-node contains D direct block addresses, one single-indirect block
+address, one double-indirect block address, and one triple-indirect block address.
+
+How big (in bytes) will be an inode for a file that is F bytes long? Calculate your answer for
+each case when the file spans (a) direct, (b) single-, (b) double-, and (c) triple-indirect blocks.
+ 
+Security
+
+1. What is the difference between security and privacy? Are they entirely the same? Or
+entirely different?
+2. Explain the three key principles of computer security?
+3. What is a threat model? What factors should you consider when defining threat
+model?
+4. What hardware mechanism does x86 ISA provide to ensure that Operating System’s
+code and data are protected from user-level processes?
+5. What is the role of privilege levels (defined by the ISA) in a computer system? How
+many privilege levels are defined in the x86 ISA? In which privilege level does the
+OS execute?
+6. Explain the basic security mechanisms supported by (a) the CPU execution
+hardware, (b) Memory management hardware and software, (c) File system.
+Assume that the machine uses x86 ISA.
+
+7. What is authentication?
+8. Describe different techniques to authenticate users.
+9. What are some ways in which by which authentication mechanisms can be
+subverted?
+10. What’s a computer virus? What’s a computer worm?
+11. Explain a buffer overflow attack.
+12. What is sandboxing? List two sandboxing mechanisms.
+13. Explain Discretionary, Mandatory, and Role-based access control mechanisms.
+14. Explain (a) trusted computing base (TCB) including why is it called “Trusted”, (b)
+Reference Monitor, and (c) relationship between TCB and reference monitor.
+
+15. Explain the two key data access principles of multi-level security (MLS) systems
+(also called Mandatory Access Control).
+
+16. Why is Mandatory access control called “mandatory”? What’s the alternative?
+
+17. What type of systems require mandatory access control?
+
+18. Give an example of a scenario where the software doesn’t trust the OS, hypervisor, and/or the
+hardware platform on which it runs? What can the software possibly do to “secure” itself in this
+situation?
+
+19. Considering memory protection, explain how the operating system ensures that user-level processes
+don’t access kernel-level memory?
+
+ 
+
+Virtualization
+1. For system virtual machines, explain how virtual memory addresses are translated to physical
+addresses when (a) hardware supports EPT/NPT (extended/nested page tables) and (b) hardware
+only supports traditional (non-nested) page tables.
+
+2. How does Intel VTx extending the traditional CPU execution privilege levels to support system virtual
+machines?
+
+3. Compare different approaches for virtualizing I/O devices for virtual machines.
+
+4. Explain briefly with examples (1) Process virtual machine, (2) System virtual machine, (3) Emulator,
+(4) Binary optimizer, (5) High-level Language Virtual Machine.
+
+
+5. Which interface does a Process VM virtualize? Which interface does a System VM virtualize?
+
+6. (a) How do Interpreters differ from Dynamic Binary Translators? (b) How do Binary Optimizers differ
+from Emulators?
+
+7. What are the advantages and disadvantages of Classical System VMs compared to Para-virtualized
+VMs?
+
+8. Give at least three mechanism(s) by which the highest privileged software, such as an operating
+system or a hypervisor, retains control over the CPU?
+
+9. What is a co-designed virtual machine? Briefly describe and give an example.
+
+10. What type of virtual machine (VM) is each of the following and why? Be as specific as possible. (a)
+Java Virtual Machine (JVM) (b) VMWare (c) Xen (d) Digital FX!32 (e) VirtualPC (f) (e) Transmeta
+Crusoe (Code Morphing)
+
+11. Explain the difference between the concepts of full-virtualization and para-virtualization, giving at least
+one example of both virtualization techniques.
+
+12. When you have design a system that does emulation, under what circumstances would you opt for
+Interpretation and when would you opt for Binary Translation? Justify your answer.
+13. Let’s say that you are asked to modify the Linux OS so that programs and libraries compiled on
+Windows OS could run natively on Linux, meaning they should be executed as normal programs
+(without using any emulator or virtual machine). What would be your high-level approach?
+ 
