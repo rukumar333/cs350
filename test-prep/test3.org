@@ -48,11 +48,10 @@ kernel level threads.
     Both kernel and user-level threads. Threads are ran based on the current process and the timeslice for it. At the user-level, only processes can be seen
     so threads only run once the process is in. At kernel level, although kernel recognizes kernel threads, they can also be looked at based on the process running them.
 
-** TODO 7. What kind of applications benefit the most from kernel-level threads support? What kind of applications benefit most from user-level threads support? Explain why with examples?
-*** TODO Kernel-level Thread Applications  
-    Applications that contain threads that require different priorities would be better for kernel-level thread applications. This is because the
-    individual threads can be scheduled and so can have different priorities.
-*** TODO User-level Thread Applications    
+** DONE 7. What kind of applications benefit the most from kernel-level threads support? What kind of applications benefit most from user-level threads support? Explain why with examples?
+*** DONE Kernel-level Thread Applications  
+    Applications that have a lot of IO operations.
+*** DONE User-level Thread Applications
     Applications that contain threads that require about the same amount of priority would be better for user-level threads. This is because the
     individual threads do not need to be scheduled and the kernel only needs to schedule time for the process.
 ** DONE 8. Explain how a web server could use threads to improve concurrency when serving client requests.
@@ -81,7 +80,7 @@ kernel level threads.
    If there are long running event handlers, those events will take longer to run so then the other events have to wait
    longer to run next. By having separate threads for each event, the timeslice for each event can be individually scheduled.
    
-** TODO 12. What type of applications would be more suitable for thread-based programming compared to event-driven programming?
+** DONE 12. What type of applications would be more suitable for thread-based programming compared to event-driven programming?
    Applications that are running on multiple CPU machines and that have longer event handlers. Also, applications whose different events may
    have different priorities that each thread can have a scheduled timeslice based on priority. 
 
@@ -89,14 +88,14 @@ kernel level threads.
    Callbacks are functions that are passed to other functions as variables to be called within those functions. Callbacks are used within the same thread that called the initial function.
    Therefore, it is difficult to pass callbacks amongst different threads.
    
-** TODO 14. Assume a single-CPU system. You are given three multi-threaded processes. P1 does a lot of computation, but little I/O. P2 does lots of I/O but little computation. P3 does a reasonable mix of both computation and I/O. What kind of threads would you prefer for each process? Explain why?
-*** TODO P1: Lot of computation/little IO
+** DONE 14. Assume a single-CPU system. You are given three multi-threaded processes. P1 does a lot of computation, but little I/O. P2 does lots of I/O but little computation. P3 does a reasonable mix of both computation and I/O. What kind of threads would you prefer for each process? Explain why?
+*** DONE P1: Lot of computation/little IO
     User-level threads would be best for this since there is little IO. With little IO, the system calls for the IO will not block the entire process.
     Meanwhile, alot of computation focuses on thread execution and performance and user-level threads have better performance than kernel-level ones.
-*** TODO P2: Lot of IO 
+*** DONE P2: Lot of IO 
     Kernel-level threads would be best since a lot of IO will not block the entire process if one of the threads is blocked by IO. The other threads
     can continue to run. Furthermore, since there is not a lot of computation, performance is not as important so kernel-level threads can be used.
-*** TODO P3: Lot of IO and computation
+*** DONE P3: Lot of IO and computation
     Kernel-level threads would still be best due to the high amounts of IO. High amounts of IO would cause user-level threads to block their whole processes.
 
 
@@ -576,45 +575,95 @@ SL  SLEEP_UNTIL_SIGNAL
 
 
 * Virtualization
-** 1. For system virtual machines, explain how virtual memory addresses are translated to physical
-   addresses when (a) hardware supports EPT/NPT (extended/nested page tables) and (b) hardware
-   only supports traditional (non-nested) page tables.
-
-** 2. How does Intel VTx extending the traditional CPU execution privilege levels to support system virtual
-   machines?
-
-** 3. Compare different approaches for virtualizing I/O devices for virtual machines.
-
-** 4. Explain briefly with examples (1) Process virtual machine, (2) System virtual machine, (3) Emulator,
-   (4) Binary optimizer, (5) High-level Language Virtual Machine.
-
-
-** 5. Which interface does a Process VM virtualize? Which interface does a System VM virtualize?
-
-** 6. (a) How do Interpreters differ from Dynamic Binary Translators? (b) How do Binary Optimizers differ
-   from Emulators?
-
-** 7. What are the advantages and disadvantages of Classical System VMs compared to Para-virtualized
-   VMs?
-
-** 8. Give at least three mechanism(s) by which the highest privileged software, such as an operating
-   system or a hypervisor, retains control over the CPU?
-
-** 9. What is a co-designed virtual machine? Briefly describe and give an example.
-
-** 10. What type of virtual machine (VM) is each of the following and why? Be as specific as possible. (a)
-   Java Virtual Machine (JVM) (b) VMWare (c) Xen (d) Digital FX!32 (e) VirtualPC (f) (e) Transmeta
-   Crusoe (Code Morphing)
-
-** 11. Explain the difference between the concepts of full-virtualization and para-virtualization, giving at least
-   one example of both virtualization techniques.
-
-** 12. When you have design a system that does emulation, under what circumstances would you opt for
-   Interpretation and when would you opt for Binary Translation? Justify your answer.
-** 13. Let’s say that you are asked to modify the Linux OS so that programs and libraries compiled on
-   Windows OS could run natively on Linux, meaning they should be executed as normal programs
-   (without using any emulator or virtual machine). What would be your high-level approach?
- 
+** DONE 1. For system virtual machines, explain how virtual memory addresses are translated to physical addresses when 
+*** DONE (a) hardware supports EPT/NPT (extended/nested page tables) and
+    With this, there are two levels of page tables. First, the virtual memory addresses are mapped to a guest physical address space.
+    From this address space, another page table is used to get to the actual physical memory.
+*** DONE (b) hardware only supports traditional (non-nested) page tables.
+    In this case, a shadow page table is used which combines the nested page model and maps from the guest virtual address space directly to the physical
+    address space. The software (hypervisor) is required to manage this page table and is not natively supported by the underlyind hardware.
+** TODO 2. How does Intel VTx extending the traditional CPU execution privilege levels to support system virtual machines?   
+** DONE 3. Compare different approaches for virtualizing I/O devices for virtual machines.
+*** DONE Device Emulation
+    In this case, the hypervisor traps each I/O operation and translates it into proper operations for the underlying I/O devices. This is very slow.
+*** DONE Para-Virtual Devices
+    In this case, special device drivers are inserted into the guest OS that directly interact with the hypervisor. These special device drivers are quicker than
+    device emulation and are commonly used.
+*** DONE Direct Device Access
+    In this case, the hypervisor allows the guest OS to directly interact with the I/O hardware. This is not scalable.
+** DONE 4. Explain briefly with examples
+*** DONE (1) Process virtual machine,
+    A process virtual machine simply virtualizes the Application Binary Interface. Therefore, it simply converts binary instructions into ones that can work
+    with the underlying ABI. It runs in the user-space and runs with the process utilizing it. It is runtime software and stops when the process is finished using it.
+    An example is the Java Virtual Machine which executes byte code files. These byte code files rely on the JVM ABI which the JVM then converts into appropriate
+    insturctions using the underlying ABI.
+*** DONE (2) System virtual machine,
+    The ISA is virtualized in this case. The software that virtualizes the ISA is called the hypervisor which is in itself another OS (an OS for OSs). It
+    runs in privileged mode. It catches privileged operations by the OS by interrupting and emulating those instructions. An example VirtualBox by Oracle
+    which allows you to run another OS within another OS.
+*** DONE (3) Emulator,
+    Performs conversion from one ISA to another ISA. A form of process virtual machine (runtime). For example, convert instructions for x86 applications
+    to run on Alpha ISA without any modifications. x86 instructions would be convereted to Alpha ISA by the runtime.
+*** DONE (4) Binary optimizer,
+    Performs conversion from same ISA to itself. However, in between, it optimizes code by making it run faster or improving security such as
+    detecting buffer overflow attacks. Also a process virtual machine. 
+*** DONE (5) High-level Language Virtual Machine.
+    Source and target ISA are different. Converts from virtual ISA to native ISA. There is on actual physical machine which supports the virtual ISA.
+    An example is the JVM. 
+** DONE 5. Which interface does a Process VM virtualize? Which interface does a System VM virtualize?
+*** DONE Process VM
+    ABI
+*** DONE System VM
+    ISA
+** DONE 6. 
+*** DONE (a) How do Interpreters differ from Dynamic Binary Translators? 
+    These fetch, decode, and emualte each individual instruction whereas dynamic binary translators are faster because they translate blocks of instructions to
+    the native ISA.
+*** DONE (b) How do Binary Optimizers differ from Emulators?    
+    Binary optimizers take instructions from one ISA to the same ISA and just optimize the code. Emulators convert insturctions from one ISA to another ISA.
+** DONE 7. What are the advantages and disadvantages of Classical System VMs compared to Para-virtualized VMs?   
+*** DONE Advantages
+    The OS does not need to be altered for a Classical System VM. The guest OS is able to see a hardware abstraction exactly identical
+    to the underlying ISA.
+*** DONE Disadvantages
+    The performance is lower compared to Para-virtualized VM because in a para-virtualized VM, the guest OS is altered to replace some high privilege
+    calls with direct calls to the hypervisor which avoids the full need to trap, decode, and emulate. The guest OS sees a hardware abstraction that is not
+    identical to the underlying one in that case.
+** DONE 8. Give at least three mechanism(s) by which the highest privileged software, such as an operating system or a hypervisor, retains control over the CPU?   
+   It uses timer interrupts to retain control over the CPU. Using the interrupts, once the VM or process has used up its allocated time, the interrupt will be fired
+   allowing the highest level software to take control. Furthermore, the highest level software also gains control of the CPU whenever privileged calls are made. In addition,
+   the guest OS is not allowed to see the actual timer value which gives the highest level software (in this case the hypervisor) more control.
+** DONE 9. What is a co-designed virtual machine? Briefly describe and give an example.
+   This virtual machine is built closely for a specific ISA. Usually, not many OS's support that specified ISA and therefore the machine is generally used to allow
+   OS and software to run on the specific ISA. An example is the Transmeta Crusoe which was based on VLIW which few OS's use. Therefore, the VM allowed software that runs on other
+   ISAs such as x86 to run on the Transmeta Crusoe ISA. Emulation was performed from the guest ISA to the host ISA.
+** DONE 10. What type of virtual machine (VM) is each of the following and why? Be as specific as possible. 
+*** DONE (a) Java Virtual Machine (JVM)
+    High level language virtual machine (process virtual machine). This is because it takes in a program which would operate on a virtual ISA and
+    emulates it to the underlying ISA.
+*** DONE (b) VMWare 
+    The VMWare desktop client is a hosted virtual machine. It runs as process in the host OS in both the kerlen and user space level.
+    It lets the host OS handle the hardware for the guest OS through the host OS's drivers.
+*** DONE (c) Xen
+    This is a system virtual machine which provides both full virtualization and para virtualization.
+*** DONE (d) Digital FX!32 
+    This is an process virtual machine emulator. It allowed programs built to run on x86 to run on the Alpha ISA. It is a runtime program and only
+    runs while the program needing it is running.
+*** DONE (e) VirtualPC 
+    This is a whole system virtualization. This allows a guest OS which runs on a different ISA to run on the host ISA by using the host OS. Therefore, emulation is required.
+    This was used for running Windows on the old Mac machines which used the PowerPC ISA. Hosted System Virtual Machine + Different ISA.
+*** DONE (f) Transmeta Crusoe (Code Morphing)
+    This is a co-designed VM. This virtual machine was built closely with a specific ISA and was used because many OS's did not support that ISA.
+    Therefore it allowed OS which ran on other ISAs to run on the specified one.
+** DONE 11. Explain the difference between the concepts of full-virtualization and para-virtualization, giving at least one example of both virtualization techniques.
+   Full virtualization virtualizes all of the hardware. Therefore, when the guest OS executes a priviledged instruction, it sees a full virtual abstraction of the underlying architecture.
+   The instructions are emulated by the hypervisor to the underlying ISA and the guest OS requires no alteration. Ex. KVM and VMWare ESX are full virtualization.
+   Para virtualization does not fully virtualize all of the hardware. The hypervisor replaces from privileged calls in the guest OS to direct calls to the hypervisor for
+   the hypervisor to handle. This requires altering the OS but allows for faster execution.
+** DONE 12. When you have design a system that does emulation, under what circumstances would you opt for Interpretation and when would you opt for Binary Translation? Justify your answer.
+   An interpreter might be necessary if a simpler system is needed such as when there is limited time or resources to build the system. If you also want to individually decode each instruction
+   an interpreter would be better. A binary translation would be better if there are more resources as it is complex but is faster than an interpreter.
+** TODO 13. Let’s say that you are asked to modify the Linux OS so that programs and libraries compiled on Windows OS could run natively on Linux, meaning they should be executed as normal programs (without using any emulator or virtual machine). What would be your high-level approach? 
 
 
 * Questions
