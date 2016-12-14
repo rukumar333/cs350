@@ -84,7 +84,7 @@ kernel level threads.
    Applications that are running on multiple CPU machines and that have longer event handlers. Also, applications whose different events may
    have different priorities that each thread can have a scheduled timeslice based on priority. 
 
-** TODO 13. What are callbacks and what problems can they cause when used with threads?
+** DONE 13. What are callbacks and what problems can they cause when used with threads?
    Callbacks are functions that are passed to other functions as variables to be called within those functions. Callbacks are used within the same thread that called the initial function.
    Therefore, it is difficult to pass callbacks amongst different threads.
    
@@ -267,10 +267,10 @@ OK  RET
    end
    end monitor
 
-** TODO 16. Consider the “events vs threads” argument in the context of monilithic operating system kernels (like Linux or Windows). 
-*** TODO (a) Which model do these operating systems primarily use -- events or threads? Why? 
-    They primarily use threads. They primarily use threads because they are easy to schedule and run on multiple CPUs.
-*** TODO (b) Let’s say you that have to design an operating system that uses the opposite model to what you just answered in (a). What would be the major design changes you would make to the kernel in terms of CPU scheduling, memory management, and I/O processing subsystems?
+** DONE 16. Consider the “events vs threads” argument in the context of monilithic operating system kernels (like Linux or Windows). 
+*** DONE (a) Which model do these operating systems primarily use -- events or threads? Why? 
+    They primarily use threads. They primarily use threads because they are easy to schedule and run on multiple CPUs. Furthermore, the threads are executing the same kernel code.
+*** DONE (b) Let’s say you that have to design an operating system that uses the opposite model to what you just answered in (a). What would be the major design changes you would make to the kernel in terms of CPU scheduling, memory management, and I/O processing subsystems?
 ** DONE 17. What are the tradeoffs in using semaphores versus monitors with condition variables?
    Semaphores are used to lock shared resources whereas monitors with condition variables are used to lock functions. Furthermore, semaphores naturally take care of counts since they are
    of integer value whereas condition variables are not and therefore are better suited for a singular count. Furthermore, condition variables are used more to
@@ -310,7 +310,7 @@ OK  RET
     something that works. If possible, you can support your answer with real examples from within
     Linux source code where each of the above types of locking/unlocking approaches are used.
 
-** TODO 19. Explain how you can implement the WAIT and SIGNAL operations on condition variable using the TSL instruction.
+** DONE 19. Explain how you can implement the WAIT and SIGNAL operations on condition variable using the TSL instruction.
 *** WAIT 
     MV %1, &condition //Give up lock
 SL  SLEEP_UNTIL_SIGNAL
@@ -319,7 +319,6 @@ SL  SLEEP_UNTIL_SIGNAL
     JNE SL
     RET
 *** SIGNAL
-    MV %1, &condition //Gives up lock
     SIGNAL_SLEEPING_THREADS
     RET
 
@@ -356,7 +355,7 @@ SL  SLEEP_UNTIL_SIGNAL
    In addition, a system call simply returns the status of the execution of the system call. A system call also requires an interrupt (TRAP) to change the state to call
    kernel level code.
    
-** TODO 8. Rootkits (malicious code in the kernel) can intercept system calls made by processes (all processes or a specific process) and replace the original system call behavior with some other behavior.. How would you go about implementing such behavior? Describe the design but don’t write any code.
+** DONE 8. Rootkits (malicious code in the kernel) can intercept system calls made by processes (all processes or a specific process) and replace the original system call behavior with some other behavior.. How would you go about implementing such behavior? Describe the design but don’t write any code.
    This can be done by changing the syscall table numbers. For example, given an index number of 10 for the syscall open(), 10 can be mapped to the rootkit syscall code which will eventually
    call open() inside its code to let the user think the open() code was ran successfully.
 
@@ -504,7 +503,6 @@ SL  SLEEP_UNTIL_SIGNAL
  
 
 * Security
-
 ** DONE 1. What is the difference between security and privacy? Are they entirely the same? Or entirely different?
    Security is CIA -> Data confidentiality, Data integrity, System availability. Just has to do with the confidentiality part where data cannot be accessed by others.
 
@@ -582,7 +580,8 @@ SL  SLEEP_UNTIL_SIGNAL
 *** DONE (b) hardware only supports traditional (non-nested) page tables.
     In this case, a shadow page table is used which combines the nested page model and maps from the guest virtual address space directly to the physical
     address space. The software (hypervisor) is required to manage this page table and is not natively supported by the underlyind hardware.
-** TODO 2. How does Intel VTx extending the traditional CPU execution privilege levels to support system virtual machines?   
+** DONE 2. How does Intel VTx extending the traditional CPU execution privilege levels to support system virtual machines?
+   Adds a root level for the hypervisor.
 ** DONE 3. Compare different approaches for virtualizing I/O devices for virtual machines.
 *** DONE Device Emulation
     In this case, the hypervisor traps each I/O operation and translates it into proper operations for the underlying I/O devices. This is very slow.
