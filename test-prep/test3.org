@@ -42,7 +42,7 @@ kernel level threads.
      Global state of all threads has to be kept in track.
 
 ** DONE 6. What combinations or user/kernel threads and global/local scheduling are feasible and why?
-*** Global Scheduling   
+*** Global Scheduling
     Only kernel threads. For global scheduling, individual threads are scheduled for the CPU. The kernel only recognized kernel threads, not user level threads.
 *** Local Scheduling
     Both kernel and user-level threads. Threads are ran based on the current process and the timeslice for it. At the user-level, only processes can be seen
@@ -182,14 +182,14 @@ kernel level threads.
    the value of the lock is copied to a register and then the value of the lock is set to 1.
 
 ** DONE 13. Explain how you can implement the UP and DOWN operations on a mutex (binary semaphore) using the TSL instruction.
-*** DONE UP
+*** DONE DOWN
     TSL &mutex, register
     CMP register, %1
     JZE OK
     CALL thread_yield
-    JMP UP
+    JMP down
 OK  RET
-*** DONE DOWN
+*** DONE UP
     MV %1, &mutex
     RET
 ** DONE 14. Consider the classical producer-consumer problem. Producers produce items and insert them in a common buffer. Consumers remove items from the common buffer and consume them. In the following skeleton of pseudo-code, demonstrate the use of SEMAPHORES and MUTEXES to complete the pseudo-code for producer and consumer functions. Your code should have no race conditions and no busy loops.
@@ -607,7 +607,7 @@ SL  SLEEP_UNTIL_SIGNAL
     Performs conversion from same ISA to itself. However, in between, it optimizes code by making it run faster or improving security such as
     detecting buffer overflow attacks. Also a process virtual machine. 
 *** DONE (5) High-level Language Virtual Machine.
-    Source and target ISA are different. Converts from virtual ISA to native ISA. There is on actual physical machine which supports the virtual ISA.
+    Source and target ISA are different. Converts from virtual ISA to native ISA. There is no actual physical machine which supports the virtual ISA.
     An example is the JVM. 
 ** DONE 5. Which interface does a Process VM virtualize? Which interface does a System VM virtualize?
 *** DONE Process VM
